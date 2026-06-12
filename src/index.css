@@ -1,0 +1,248 @@
+:root {
+  /* Tipografía Principal */
+  --font-main: 'Outfit', system-ui, -apple-system, sans-serif;
+  
+  /* Colores Globales (Light Mode) */
+  --bg-body: #F4F7FE; /* Fondo claro moderno, estilo dashboard */
+  --bg-surface: #FFFFFF;
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  
+  /* Textos */
+  --text-primary: #1E293B; /* Slate 800 */
+  --text-secondary: #64748B; /* Slate 500 */
+  --text-muted: #94A3B8; /* Slate 400 */
+  
+  /* Colores de la Marca / Tema */
+  --primary: #4318FF; /* Azul púrpura vibrante, moderno */
+  --primary-hover: #3311DB;
+  --primary-light: rgba(67, 24, 255, 0.1);
+  
+  --secondary: #2B3674; /* Azul oscuro profundo */
+  
+  /* Colores del Semáforo (Notas) */
+  --semaforo-azul: #00B5D8;    /* 18-20: Excelente (Cyan/Azul Claro) */
+  --semaforo-verde: #05CD99;   /* 14-17: Bueno (Verde vibrante) */
+  --semaforo-amarillo: #FFCE20;/* 11-13: Regular (Amarillo) */
+  --semaforo-rojo: #EE5D50;    /* 0-10: Apoyo (Rojo coral) */
+  
+  /* Variantes Suaves Semáforo (para fondos de tarjetas) */
+  --semaforo-azul-light: rgba(0, 181, 216, 0.1);
+  --semaforo-verde-light: rgba(5, 205, 153, 0.1);
+  --semaforo-amarillo-light: rgba(255, 206, 32, 0.1);
+  --semaforo-rojo-light: rgba(238, 93, 80, 0.1);
+
+  /* Sombras y Borders */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  --shadow-card: 0px 18px 40px rgba(112, 144, 176, 0.12); /* Sombra difusa premium */
+  
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-xl: 30px;
+
+  --border-color: #E2E8F0;
+  
+  /* Transiciones */
+  --transition-fast: 0.2s ease-in-out;
+  --transition-normal: 0.3s ease;
+}
+
+/* Reset y Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tipografía Base */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--secondary);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Utilidades de Glassmorphism */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Componentes Comunes */
+.card {
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 22px 45px rgba(112, 144, 176, 0.18);
+}
+
+/* Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  font-size: 15px;
+  font-family: var(--font-main);
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-fast);
+  text-align: center;
+  gap: 8px;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0px 4px 10px rgba(67, 24, 255, 0.3);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  color: white;
+  box-shadow: 0px 6px 14px rgba(67, 24, 255, 0.4);
+}
+
+.btn-secondary {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.btn-secondary:hover {
+  background: rgba(67, 24, 255, 0.15);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-outline:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: var(--border-radius-sm);
+}
+
+.btn-icon {
+  padding: 10px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Inputs y Formularios */
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-control {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  background-color: #F4F7FE;
+  font-family: var(--font-main);
+  font-size: 15px;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: white;
+  box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+/* Badges */
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+/* Semáforo Clases */
+.text-semaforo-azul { color: var(--semaforo-azul); }
+.text-semaforo-verde { color: var(--semaforo-verde); }
+.text-semaforo-amarillo { color: var(--semaforo-amarillo); }
+.text-semaforo-rojo { color: var(--semaforo-rojo); }
+
+.bg-semaforo-azul { background-color: var(--semaforo-azul); color: white; }
+.bg-semaforo-verde { background-color: var(--semaforo-verde); color: white; }
+.bg-semaforo-amarillo { background-color: var(--semaforo-amarillo); color: white; }
+.bg-semaforo-rojo { background-color: var(--semaforo-rojo); color: white; }
+
+.bg-semaforo-azul-light { background-color: var(--semaforo-azul-light); color: var(--semaforo-azul); }
+.bg-semaforo-verde-light { background-color: var(--semaforo-verde-light); color: var(--semaforo-verde); }
+.bg-semaforo-amarillo-light { background-color: var(--semaforo-amarillo-light); color: #B38600; }
+.bg-semaforo-rojo-light { background-color: var(--semaforo-rojo-light); color: var(--semaforo-rojo); }
+
+/* Utilidades */
+.text-center { text-align: center; }
+.w-full { width: 100%; }
+.mt-4 { margin-top: 16px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-2 { margin-bottom: 8px; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-4 { gap: 16px; }
