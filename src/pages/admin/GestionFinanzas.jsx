@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Wallet,
   Search,
@@ -7,74 +8,103 @@ import {
   AlertCircle,
   Plus,
   Receipt,
-  Download
+  Download,
+  Loader2
 } from 'lucide-react';
+import api from '../../services/api';
 
 export default function GestionFinanzas() {
   const [tipoInstitucion, setTipoInstitucion] = useState('PUBLICO');
   const [searchTerm, setSearchTerm] = useState('');
   const [showModalConcepto, setShowModalConcepto] = useState(false);
-  
-  // Para colegio Público (Cuotas)
-  const [conceptos, setConceptos] = useState([
-    { id: 1, nombre: 'Aporte APAFA 2026', monto: 50 },
-    { id: 2, nombre: 'Pro-Fondos Aniversario', monto: 20 }
-  ]);
+  const [cargando, setCargando] = useState(true);
+  const [conceptos, setConceptos] = useState([]);
   const [nuevoConcepto, setNuevoConcepto] = useState({ nombre: '', monto: '' });
-
-  // Estudiantes mockeados con estado de pago
-  const [estudiantes, setEstudiantes] = useState([
-    { id: 1, nombre: 'Juan Pérez', dni: '71234567', grado: '3ro Sec', 
-      pagosPublico: { 1: true, 2: false }, 
-      pagosPrivado: { matricula: true, marzo: true, abril: false } 
-    },
-    { id: 2, nombre: 'Sofía Castro', dni: '72345678', grado: '5to Sec', 
-      pagosPublico: { 1: false, 2: false }, 
-      pagosPrivado: { matricula: true, marzo: false, abril: false } 
-    }
-  ]);
+  const [estudiantes, setEstudiantes] = useState([]);
+  const [pagos, setPagos] = useState([]); // List of PagoEstudiante
 
   useEffect(() => {
     const config = localStorage.getItem('academicScope_config');
     if (config) {
       setTipoInstitucion(JSON.parse(config).tipoInstitucion);
     }
+    fetchDatos();
   }, []);
 
-  const handleCrearConcepto = (e) => {
-    e.preventDefault();
-    setConceptos([...conceptos, { id: Date.now(), nombre: nuevoConcepto.nombre, monto: parseFloat(nuevoConcepto.monto) }]);
-    setNuevoConcepto({ nombre: '', monto: '' });
-    setShowModalConcepto(false);
+  const fetchDatos = async () => {
+    try {
+      setCargando(true);
+      const [conceptosRes, estudiantesRes, pagosRes] = await Promise.all([
+        api.get('/finanzas/conceptos').catch(() => ({ data: [] })),
+        api.get('/usuarios/rol/ESTUDIANTE').catch(() => ({ data: [] })),
+        api.get('/finanzas/pagos').catch(() => ({ data: [] }))
+      ]);
+      setConceptos(conceptosRes.data);
+      setEstudiantes(estudiantesRes.data);
+      setPagos(pagosRes.data);
+    } catch (error) {
+      console.error("Error al cargar datos financieros", error);
+    } finally {
+      setCargando(false);
+    }
   };
 
-  const togglePagoPublico = (estudianteId, conceptoId) => {
-    setEstudiantes(estudiantes.map(est => {
-      if (est.id === estudianteId) {
-        return {
-          ...est,
-          pagosPublico: { ...est.pagosPublico, [conceptoId]: !est.pagosPublico[conceptoId] }
-        };
-      }
-      return est;
-    }));
+  const handleCrearConcepto = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/finanzas/conceptos', { 
+        nombre: nuevoConcepto.nombre, 
+        monto: parseFloat(nuevoConcepto.monto) 
+      });
+      setConceptos([...conceptos, res.data]);
+      setNuevoConcepto({ nombre: '', monto: '' });
+      setShowModalConcepto(false);
+    } catch (error) {
+      console.error("Error al crear concepto", error);
+    }
+  };
+
+  const togglePagoPublico = async (estudianteId, conceptoId) => {
+    try {
+      // Optmistic UI update can be complex here, so we update after success or refetch
+      const res = await api.post(`/finanzas/pagos/toggle/${estudianteId}/${conceptoId}`);
+      const pagoActualizado = res.data;
+      
+      // Update local state
+      setPagos(prevPagos => {
+        const existe = prevPagos.find(p => p.id === pagoActualizado.id);
+        if (existe) {
+          return prevPagos.map(p => p.id === pagoActualizado.id ? pagoActualizado : p);
+        } else {
+          return [...prevPagos, pagoActualizado];
+        }
+      });
+    } catch (error) {
+      console.error("Error al registrar pago", error);
+    }
   };
 
   const togglePagoPrivado = (estudianteId, mes) => {
-    setEstudiantes(estudiantes.map(est => {
-      if (est.id === estudianteId) {
-        return {
-          ...est,
-          pagosPrivado: { ...est.pagosPrivado, [mes]: !est.pagosPrivado[mes] }
-        };
-      }
-      return est;
-    }));
+    alert("La gestión de pensiones privadas aún no está conectada a la base de datos.");
+  };
+
+  // Helper para saber si pagó
+  const isPagadoPublico = (estudianteId, conceptoId) => {
+    const pago = pagos.find(p => p.estudiante?.id === estudianteId && p.concepto?.id === conceptoId);
+    return pago ? pago.pagado : false;
   };
 
   const filteredEstudiantes = estudiantes.filter(e => 
-    e.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || e.dni.includes(searchTerm)
+    `${e.nombre} ${e.apellido}`.toLowerCase().includes(searchTerm.toLowerCase()) || (e.dni && e.dni.includes(searchTerm))
   );
+
+  if (cargando) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin w-8 h-8 text-indigo-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[1200px] mx-auto animate-fade-in pb-12 font-sans">
@@ -159,8 +189,8 @@ export default function GestionFinanzas() {
               {filteredEstudiantes.map(est => (
                 <tr key={est.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
-                    <p className="font-bold text-slate-800 text-sm">{est.nombre}</p>
-                    <p className="text-xs font-medium text-slate-500">{est.grado} - DNI: {est.dni}</p>
+                    <p className="font-bold text-slate-800 text-sm">{est.apellido}, {est.nombre}</p>
+                    <p className="text-xs font-medium text-slate-500">DNI: {est.dni}</p>
                   </td>
                   
                   {tipoInstitucion === 'PUBLICO' ? (
@@ -169,13 +199,13 @@ export default function GestionFinanzas() {
                         <button 
                           onClick={() => togglePagoPublico(est.id, c.id)}
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                            est.pagosPublico[c.id] 
+                            isPagadoPublico(est.id, c.id) 
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
                             : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                           }`}
                         >
-                          {est.pagosPublico[c.id] ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                          {est.pagosPublico[c.id] ? 'PAGADO' : 'DEUDA'}
+                          {isPagadoPublico(est.id, c.id) ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                          {isPagadoPublico(est.id, c.id) ? 'PAGADO' : 'DEUDA'}
                         </button>
                       </td>
                     ))
@@ -184,14 +214,9 @@ export default function GestionFinanzas() {
                       <td key={mes} className="px-6 py-4 text-center">
                         <button 
                           onClick={() => togglePagoPrivado(est.id, mes)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                            est.pagosPrivado[mes] 
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
-                            : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                          }`}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-white text-slate-500 border-slate-200 hover:bg-slate-50`}
                         >
-                          {est.pagosPrivado[mes] ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                          {est.pagosPrivado[mes] ? 'PAGADO' : 'MOROSO'}
+                          <XCircle size={14} /> MOROSO
                         </button>
                       </td>
                     ))
@@ -204,30 +229,43 @@ export default function GestionFinanzas() {
       </div>
 
       {/* Modal Nuevo Concepto */}
-      {showModalConcepto && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-              <h3 className="text-xl font-bold text-slate-800">Nuevo Aporte/Cuota</h3>
+      {showModalConcepto && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999]" 
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+        >
+          <div 
+            className="bg-white rounded-3xl overflow-hidden shadow-2xl"
+            style={{ width: '400px', maxWidth: '90vw', display: 'flex', flexDirection: 'column' }}
+          >
+            <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-800">Nuevo Aporte/Cuota</h3>
+              <button onClick={() => setShowModalConcepto(false)} className="text-slate-400 hover:text-slate-800 transition-colors">
+                <XCircle size={24} />
+              </button>
             </div>
-            <form onSubmit={handleCrearConcepto} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Nombre del Concepto</label>
-                  <input required type="text" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-indigo-500 font-medium text-sm" value={nuevoConcepto.nombre} onChange={e => setNuevoConcepto({...nuevoConcepto, nombre: e.target.value})} placeholder="Ej. Cuota APAFA" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Monto (S/)</label>
-                  <input required type="number" step="0.10" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-indigo-500 font-medium text-sm" value={nuevoConcepto.monto} onChange={e => setNuevoConcepto({...nuevoConcepto, monto: e.target.value})} placeholder="0.00" />
+            <form onSubmit={handleCrearConcepto} className="p-6 flex flex-col gap-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Nombre del Concepto</label>
+                <input required type="text" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-indigo-500 font-medium text-sm text-slate-800" value={nuevoConcepto.nombre} onChange={e => setNuevoConcepto({...nuevoConcepto, nombre: e.target.value})} placeholder="Ej. Cuota APAFA" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Monto (S/)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">S/</span>
+                  <input required type="number" step="0.10" min="0" className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-indigo-500 font-bold text-sm text-slate-800" value={nuevoConcepto.monto} onChange={e => setNuevoConcepto({...nuevoConcepto, monto: e.target.value})} placeholder="0.00" />
                 </div>
               </div>
-              <div className="flex gap-3 mt-8">
+              <div className="flex gap-3 mt-4">
                 <button type="button" onClick={() => setShowModalConcepto(false)} className="flex-1 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
-                <button type="submit" className="flex-1 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">Crear</button>
+                <button type="submit" className="flex-1 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                  <CheckCircle2 size={18} /> Crear Cuota
+                </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

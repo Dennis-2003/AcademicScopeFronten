@@ -84,17 +84,22 @@ export default function Calificaciones() {
   const calcularPromedio = (estudianteId) => {
     if (evaluaciones.length === 0) return 0;
     const estNotas = notas[estudianteId] || {};
-    let sum = 0;
-    let count = 0;
+    
+    let sumaPonderada = 0;
+    let sumaPesosUsados = 0;
+    
     evaluaciones.forEach(ev => {
       const notaObj = estNotas[ev.id];
       if (notaObj && typeof notaObj.nota === 'number') {
-        sum += notaObj.nota;
-        count++;
+        const peso = ev.ponderacion || 0;
+        sumaPonderada += notaObj.nota * (peso / 100);
+        sumaPesosUsados += peso;
       }
     });
-    if (count === 0) return 0;
-    return (sum / count).toFixed(1);
+    
+    if (sumaPesosUsados === 0) return 0;
+    // Escalamos al 100% en caso el profesor no haya puesto todas las notas aún
+    return (sumaPonderada / (sumaPesosUsados / 100)).toFixed(1);
   };
 
   const guardarCambios = async () => {

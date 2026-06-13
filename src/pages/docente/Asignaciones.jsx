@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Clock, CheckCircle2, FileText, MoreVertical, Loader2 } from 'lucide-react';
+import { Plus, Clock, CheckCircle2, FileText, MoreVertical, Loader2, X, Search, Users, ExternalLink, Save } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { obtenerCursosPorDocente } from '../../services/cursoService';
 import { obtenerAsignacionesPorCurso, crearAsignacion } from '../../services/asignacionService';
+import api from '../../services/api';
 
 export default function Asignaciones() {
   const { user } = useAuth();
@@ -11,6 +12,9 @@ export default function Asignaciones() {
   const [cursos, setCursos] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [mostrandoModal, setMostrandoModal] = useState(false);
+
+  // Modal de revisión de entregas
+  const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
 
   // Estados para nueva asignacion (Tarea)
   const [nuevoTitulo, setNuevoTitulo] = useState('');
@@ -100,7 +104,11 @@ export default function Asignaciones() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {asignaciones.map((asig) => (
-            <div key={asig.id} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow p-5 group cursor-pointer">
+            <div 
+              key={asig.id} 
+              onClick={() => setTareaSeleccionada(asig)}
+              className="bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow p-5 group cursor-pointer"
+            >
               <div className="flex justify-between items-start mb-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${asig.estado === 'ACTIVA' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'}`}>
                   <FileText size={20} />
@@ -188,6 +196,215 @@ export default function Asignaciones() {
         </div>,
         document.body
       )}
+
+      {/* MODAL REVISIÓN DE ENTREGAS */}
+      {tareaSeleccionada && createPortal(
+        <RevisionEntregasModal 
+          tarea={tareaSeleccionada} 
+          onClose={() => setTareaSeleccionada(null)} 
+        />,
+        document.body
+      )}
+    </div>
+  );
+}
+
+// Sub-componente para limpiar Asignaciones.jsx
+function RevisionEntregasModal({ tarea, onClose }) {
+  const [estudiantes, setEstudiantes] = useState([]);
+  const [entregas, setEntregas] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  
+  const [busqueda, setBusqueda] = useState('');
+  
+  // Estado para la calificación en curso
+  const [revisandoEstudiante, setRevisandoEstudiante] = useState(null);
+  const [cumplio, setCumplio] = useState(true);
+  const [feedback, setFeedback] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    cargarDatos();
+  }, [tarea]);
+
+  const cargarDatos = async () => {
+    setCargando(true);
+    try {
+      const [matRes, entRes] = await Promise.all([
+        api.get(`/matriculas/curso/${tarea.curso.id}`),
+        api.get(`/asignaciones/${tarea.id}/entregas`)
+      ]);
+      
+      const activos = matRes.data.filter(m => m.estado !== 'RETIRADA').map(m => m.estudiante);
+      setEstudiantes(activos);
+      setEntregas(entRes.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const handleGuardarRevision = async () => {
+    const entrega = getEntrega(revisandoEstudiante.id);
+    if (!entrega) return;
+
+    setGuardando(true);
+    try {
+      await api.put(`/entregas/${entrega.id}/revisar`, {
+        cumplio,
+        retroalimentacion: feedback
+      });
+      setRevisandoEstudiante(null);
+      cargarDatos(); // Recargar para reflejar cambios
+    } catch (e) {
+      alert("Error al guardar revisión.");
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const getEntrega = (estId) => {
+    return entregas.find(e => e.estudiante.id === estId);
+  };
+
+  const filtrados = estudiantes.filter(e => 
+    `${e.nombre} ${e.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  return (
+    <div className="fixed inset-0 z-[200] flex justify-end">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col animate-slide-in-right">
+        
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+          <div>
+            <h3 className="text-xl font-black text-slate-800">{tarea.titulo}</h3>
+            <p className="text-sm font-medium text-slate-500 mt-1">Revisión de Tareas</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-full">
+            <X size={20} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        <div className="p-6 flex-1 overflow-y-auto bg-slate-50">
+          {cargando ? (
+            <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>
+          ) : (
+            <>
+              {/* Buscador */}
+              <div className="relative mb-6">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Buscar estudiante..." 
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                  value={busqueda}
+                  onChange={e => setBusqueda(e.target.value)}
+                />
+              </div>
+
+              {/* Lista de Estudiantes */}
+              <div className="space-y-3">
+                {filtrados.map(est => {
+                  const entrega = getEntrega(est.id);
+                  const isRevisando = revisandoEstudiante?.id === est.id;
+
+                  return (
+                    <div key={est.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                      <div className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-sm">
+                            {est.nombre.charAt(0)}{est.apellido.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-800 text-sm">{est.nombre} {est.apellido}</p>
+                            <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                              {entrega ? (
+                                <span className="text-emerald-600 font-bold flex items-center gap-1"><CheckCircle2 size={12}/> Entregado</span>
+                              ) : (
+                                <span className="text-amber-500 font-bold flex items-center gap-1"><Clock size={12}/> Pendiente</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        {entrega && !isRevisando && (
+                          <div className="flex items-center gap-3">
+                            {entrega.cumplio !== null && (
+                              <span className={`text-xs font-bold px-2 py-1 rounded ${entrega.cumplio ? 'bg-indigo-100 text-indigo-700' : 'bg-red-100 text-red-700'}`}>
+                                {entrega.cumplio ? 'Cumplió' : 'No Cumplió'}
+                              </span>
+                            )}
+                            <button 
+                              onClick={() => {
+                                setRevisandoEstudiante(est);
+                                setCumplio(entrega.cumplio !== false);
+                                setFeedback(entrega.retroalimentacion || '');
+                              }}
+                              className="text-xs font-bold text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 transition-colors"
+                            >
+                              Ver / Calificar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Panel de Revisión Desplegado */}
+                      {isRevisando && entrega && (
+                        <div className="p-4 bg-slate-50 border-t border-slate-200 animate-fade-in space-y-4">
+                          <div className="bg-white border border-slate-200 p-4 rounded-xl">
+                            <h4 className="text-xs font-bold uppercase text-slate-500 mb-2">Respuesta del Estudiante</h4>
+                            <p className="text-sm text-slate-800 whitespace-pre-wrap">{entrega.archivoUrl}</p>
+                          </div>
+                          
+                          <div className="flex gap-4 items-start">
+                            <div className="flex-1">
+                              <label className="text-xs font-bold uppercase text-slate-500 mb-2 block">Calificación</label>
+                              <div className="flex bg-white rounded-lg p-1 border border-slate-200 w-fit">
+                                <button 
+                                  onClick={() => setCumplio(true)}
+                                  className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${cumplio ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+                                >
+                                  Cumplió
+                                </button>
+                                <button 
+                                  onClick={() => setCumplio(false)}
+                                  className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${!cumplio ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+                                >
+                                  No Cumplió
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex-[2]">
+                              <label className="text-xs font-bold uppercase text-slate-500 mb-2 block">Comentario (Opcional)</label>
+                              <textarea 
+                                value={feedback}
+                                onChange={e => setFeedback(e.target.value)}
+                                className="w-full border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-indigo-500 min-h-[80px]"
+                                placeholder="Escribe un feedback al alumno..."
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button onClick={() => setRevisandoEstudiante(null)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-200 rounded-lg">Cancelar</button>
+                            <button onClick={handleGuardarRevision} disabled={guardando} className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex items-center gap-2">
+                              {guardando ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                              Guardar Revisión
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

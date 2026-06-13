@@ -30,11 +30,13 @@ import ReportesAsistencia from './pages/admin/ReportesAsistencia';
 import ConfiguracionInstitucion from './pages/admin/ConfiguracionInstitucion';
 import GestionFinanzas from './pages/admin/GestionFinanzas';
 import GestionComunicados from './pages/admin/GestionComunicados';
+import GestionComportamiento from './pages/admin/GestionComportamiento';
 
 // Vistas del Estudiante y Tutor
 import MiSemaforo from './pages/estudiante/MiSemaforo';
 import MiAsistencia from './pages/estudiante/MiAsistencia';
 import MiHorario from './pages/estudiante/MiHorario';
+import MisTareas from './pages/estudiante/MisTareas';
 import SemaforoHijos from './pages/tutor/SemaforoHijos';
 import Notificaciones from './pages/tutor/Notificaciones';
 
@@ -79,6 +81,7 @@ export default function App() {
                 <Route path="admin/pagos" element={<GestionFinanzas />} />
                 <Route path="admin/comunicados" element={<GestionComunicados />} />
                 <Route path="admin/configuracion" element={<ConfiguracionInstitucion />} />
+                <Route path="admin/conducta" element={<GestionComportamiento />} />
               </Route>
 
               {/* Rutas solo ESTUDIANTE */}
@@ -86,6 +89,7 @@ export default function App() {
                 <Route path="estudiante/notas" element={<MiSemaforo />} />
                 <Route path="estudiante/asistencia" element={<MiAsistencia />} />
                 <Route path="estudiante/horario" element={<MiHorario />} />
+                <Route path="estudiante/tareas" element={<MisTareas />} />
               </Route>
 
               {/* Rutas solo TUTOR */}

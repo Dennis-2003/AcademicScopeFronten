@@ -38,6 +38,7 @@ const NAV_CONFIG = {
       items: [
         { to: '/dashboard/admin/cursos', label: 'Gestión Académica', icon: BookOpen },
         { to: '/dashboard/admin/evaluaciones', label: 'Desempeño y Asistencia', icon: GraduationCap },
+        { to: '/dashboard/admin/conducta', label: 'Conducta', icon: AlertCircle },
       ]
     },
     {
@@ -100,6 +101,7 @@ const NAV_CONFIG = {
       category: 'Menú',
       items: [
         { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
+        { to: '/dashboard/estudiante/tareas', label: 'Mis Tareas', icon: ClipboardList },
         { to: '/dashboard/estudiante/horario', label: 'Mi Horario', icon: CalendarDays },
         { to: '/dashboard/estudiante/notas', label: 'Mis Notas', icon: GraduationCap },
         { to: '/dashboard/estudiante/asistencia', label: 'Mi Asistencia', icon: FileCheck2 },
@@ -211,7 +213,11 @@ export default function DashboardLayout() {
             className="flex items-center gap-3 p-4 hover:bg-slate-100 transition-colors"
           >
             <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold flex-shrink-0">
-              {userInitials}
+              {user.avatarUrl ? (
+                <img src={`http://localhost:8080/api/usuarios/avatar/${user.avatarUrl}`} alt="avatar" className="w-full h-full rounded-full object-cover border-2 border-indigo-200" />
+              ) : (
+                userInitials
+              )}
             </div>
             <div className="overflow-hidden flex-1">
               <h3 className="text-sm font-bold text-slate-800 truncate">{user.nombre} {user.apellido}</h3>
@@ -248,29 +254,40 @@ export default function DashboardLayout() {
           </button>
         </header>
 
-        {/* DESKTOP TOP BAR (Command Palette Trigger) */}
-        <div className="hidden lg:flex items-center justify-between h-[80px] px-8 bg-transparent">
-          <div className="flex-1 max-w-2xl ml-8">
-            {user?.rol === 'ADMIN' && (
-              <button 
-                onClick={() => setCmdOpen(true)}
-                className="flex items-center justify-between w-full max-w-[400px] bg-slate-100/80 hover:bg-slate-200/80 border border-transparent hover:border-slate-300 text-slate-500 px-4 py-2.5 rounded-xl transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <Search size={18} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
-                  <span className="text-sm font-medium">Comandos y búsqueda rápida...</span>
-                </div>
-                <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 rounded-md shadow-sm">
-                  <span>Ctrl</span>
-                  <span>K</span>
-                </div>
-              </button>
-            )}
+        {/* DESKTOP TOP BAR (Command Palette Trigger) - SOLO EN DASHBOARD */}
+        {location.pathname === '/dashboard' && (
+          <div className="hidden lg:flex items-center justify-between h-[80px] px-8 bg-transparent shrink-0">
+            <div className="flex-1 max-w-2xl ml-8">
+              {user?.rol === 'ADMIN' && (
+                <button 
+                  onClick={() => setCmdOpen(true)}
+                  className="flex items-center justify-between w-full max-w-[400px] bg-slate-100/80 hover:bg-slate-200/80 border border-transparent hover:border-slate-300 text-slate-500 px-4 py-2.5 rounded-xl transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Search size={18} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                    <span className="text-sm font-medium">Comandos y búsqueda rápida...</span>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 rounded-md shadow-sm">
+                    <span>Ctrl</span>
+                    <span>K</span>
+                  </div>
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              <NotificationsDropdown />
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <NotificationsDropdown />
+        )}
+        
+        {/* NOTIFICACIONES FLOTANTES PARA OTRAS PÁGINAS */}
+        {location.pathname !== '/dashboard' && (
+          <div className="hidden lg:flex absolute top-6 right-8 z-50">
+            <div className="bg-white/80 backdrop-blur-md rounded-full shadow-sm border border-slate-200/50">
+              <NotificationsDropdown />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* PAGE CONTENT */}
         <main className="flex-1 p-6 md:p-8 lg:p-10 w-full max-w-full overflow-x-hidden">

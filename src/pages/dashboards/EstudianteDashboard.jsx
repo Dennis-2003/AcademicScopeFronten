@@ -232,6 +232,7 @@ export default function EstudianteDashboard({ user }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <QuickAction label="Mis Notas (Semáforo)" desc="Ver detalle de calificaciones" Icon={GraduationCap} color="#10b981" bg="#10b98115" onClick={() => navigate('/dashboard/estudiante/notas')} />
               <QuickAction label="Mi Asistencia" desc="Ver reporte de tardanzas y faltas" Icon={FileCheck2} color="#6366f1" bg="#6366f115" onClick={() => navigate('/dashboard/estudiante/asistencia')} />
+              <QuickAction label="Mis Tareas" desc="Subir trabajos y ver notas" Icon={FileCheck2} color="#f43f5e" bg="#f43f5e15" onClick={() => navigate('/dashboard/estudiante/tareas')} />
             </div>
           </section>
         </div>

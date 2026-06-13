@@ -82,7 +82,7 @@ export default function DocenteDashboard({ user }) {
           try {
             const hRes = await api.get(`/horarios/docente/${user.id}`);
             const hoy = DIAS_LAB[new Date().getDay()].toUpperCase();
-            const hoyData = hRes.data.filter(h => h.dia === hoy);
+            const hoyData = hRes.data.filter(h => h.diaSemana === hoy || h.dia === hoy);
             setHorarioHoy(hoyData.length > 0 ? hoyData : []);
           } catch {}
         }

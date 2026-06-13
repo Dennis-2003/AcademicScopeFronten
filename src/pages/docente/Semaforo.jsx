@@ -46,6 +46,8 @@ export default function Semaforo() {
         id: m.estudiante.id,
         nombre: `${m.estudiante.nombre} ${m.estudiante.apellido}`,
         estado: '', 
+        puntaje: '',
+        literal: '',
         observacion: ''
       }));
       setEstudiantes(listaEstudiantes);
@@ -59,6 +61,37 @@ export default function Semaforo() {
   const handleEstadoChange = (id, nuevoEstado) => {
     setEstudiantes(estudiantes.map(est => 
       est.id === id ? { ...est, estado: nuevoEstado } : est
+    ));
+  };
+
+  const handlePuntajeChange = (id, puntajeStr) => {
+    const puntaje = parseInt(puntajeStr);
+    let nuevoEstado = '';
+    let nuevoLiteral = '';
+
+    if (!isNaN(puntaje)) {
+      if (puntaje >= 18 && puntaje <= 20) {
+        nuevoEstado = 'azul';
+        nuevoLiteral = 'AD';
+      } else if (puntaje >= 14 && puntaje <= 17) {
+        nuevoEstado = 'verde';
+        nuevoLiteral = 'A';
+      } else if (puntaje >= 11 && puntaje <= 13) {
+        nuevoEstado = 'amarillo';
+        nuevoLiteral = 'B';
+      } else if (puntaje >= 0 && puntaje <= 10) {
+        nuevoEstado = 'rojo';
+        nuevoLiteral = 'C';
+      }
+    }
+
+    setEstudiantes(estudiantes.map(est => 
+      est.id === id ? { 
+        ...est, 
+        puntaje: puntajeStr, 
+        estado: nuevoEstado || est.estado,
+        literal: nuevoLiteral || est.literal
+      } : est
     ));
   };
 
@@ -79,7 +112,9 @@ export default function Semaforo() {
           docente: { id: user.id },
           curso: { id: parseInt(cursoSeleccionado) },
           periodoAcademico: { id: 1 }, 
-          tipo: est.estado.toUpperCase(),
+          tipo: est.estado ? est.estado.toUpperCase() : 'NEUTRAL',
+          puntaje: est.puntaje !== '' ? parseInt(est.puntaje) : null,
+          calificacionLiteral: est.literal,
           descripcion: est.observacion,
           fechaRegistro: new Date().toISOString()
         };
@@ -87,7 +122,7 @@ export default function Semaforo() {
       }
       alert("Reportes guardados correctamente");
       // Limpiar los estados para evitar reenvíos
-      setEstudiantes(estudiantes.map(e => ({...e, estado: '', observacion: ''})));
+      setEstudiantes(estudiantes.map(e => ({...e, estado: '', puntaje: '', literal: '', observacion: ''})));
     } catch (error) {
       console.error("Error guardando reportes:", error);
       alert("Hubo un error al guardar los reportes");
@@ -98,6 +133,7 @@ export default function Semaforo() {
 
   const getSemaforoColor = (estado) => {
     switch (estado) {
+      case 'azul': return 'bg-indigo-600 shadow-indigo-600/40 border-indigo-700';
       case 'verde': return 'bg-emerald-500 shadow-emerald-500/40 border-emerald-600';
       case 'amarillo': return 'bg-amber-400 shadow-amber-400/40 border-amber-500';
       case 'rojo': return 'bg-red-500 shadow-red-500/40 border-red-600';
@@ -163,19 +199,40 @@ export default function Semaforo() {
                     <h3 className="font-bold text-slate-800">{est.nombre}</h3>
                     <p className="text-xs text-slate-400">ID: {est.id}</p>
                   </div>
-                  <div className="flex gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-                    <button 
-                      onClick={() => handleEstadoChange(est.id, 'verde')}
-                      className={`w-6 h-6 rounded-full border-2 transition-all shadow-sm ${est.estado === 'verde' ? getSemaforoColor('verde') : 'bg-slate-200/50 border-slate-300 opacity-50 hover:opacity-100'}`}
+                  <div className="flex gap-2 items-center bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                    <input 
+                      type="number" 
+                      min="0" max="20"
+                      placeholder="Nota"
+                      value={est.puntaje}
+                      onChange={(e) => handlePuntajeChange(est.id, e.target.value)}
+                      className="w-14 px-1 py-0.5 text-center bg-white border border-slate-300 rounded text-sm font-bold text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                     />
-                    <button 
-                      onClick={() => handleEstadoChange(est.id, 'amarillo')}
-                      className={`w-6 h-6 rounded-full border-2 transition-all shadow-sm ${est.estado === 'amarillo' ? getSemaforoColor('amarillo') : 'bg-slate-200/50 border-slate-300 opacity-50 hover:opacity-100'}`}
-                    />
-                    <button 
-                      onClick={() => handleEstadoChange(est.id, 'rojo')}
-                      className={`w-6 h-6 rounded-full border-2 transition-all shadow-sm ${est.estado === 'rojo' ? getSemaforoColor('rojo') : 'bg-slate-200/50 border-slate-300 opacity-50 hover:opacity-100'}`}
-                    />
+                    <div className="w-8 text-center text-xs font-bold text-indigo-700 bg-indigo-50 rounded py-0.5 border border-indigo-100">
+                       {est.literal || '-'}
+                    </div>
+                    <div className="flex gap-1.5">
+                      <button 
+                        onClick={() => handleEstadoChange(est.id, 'azul')}
+                        className={`w-5 h-5 rounded-full border-2 transition-all shadow-sm ${est.estado === 'azul' ? getSemaforoColor('azul') : 'bg-slate-200/50 border-slate-300 opacity-50 hover:opacity-100'}`}
+                        title="AD (18-20)"
+                      />
+                      <button 
+                        onClick={() => handleEstadoChange(est.id, 'verde')}
+                        className={`w-5 h-5 rounded-full border-2 transition-all shadow-sm ${est.estado === 'verde' ? getSemaforoColor('verde') : 'bg-slate-200/50 border-slate-300 opacity-50 hover:opacity-100'}`}
+                        title="A (14-17)"
+                      />
+                      <button 
+                        onClick={() => handleEstadoChange(est.id, 'amarillo')}
+                        className={`w-5 h-5 rounded-full border-2 transition-all shadow-sm ${est.estado === 'amarillo' ? getSemaforoColor('amarillo') : 'bg-slate-200/50 border-slate-300 opacity-50 hover:opacity-100'}`}
+                        title="B (11-13)"
+                      />
+                      <button 
+                        onClick={() => handleEstadoChange(est.id, 'rojo')}
+                        className={`w-5 h-5 rounded-full border-2 transition-all shadow-sm ${est.estado === 'rojo' ? getSemaforoColor('rojo') : 'bg-slate-200/50 border-slate-300 opacity-50 hover:opacity-100'}`}
+                        title="C (0-10)"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="relative">

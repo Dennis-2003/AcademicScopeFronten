@@ -11,6 +11,7 @@ export default function Perfil() {
     passwordActual: '', passwordNuevo: '', confirmarPassword: ''
   });
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
   const [status, setStatus] = useState({ loading: false, error: null, success: false });
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
 
@@ -37,7 +38,9 @@ export default function Perfil() {
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
+      setEditing(true); // Permitir guardar el cambio
     }
   };
 
@@ -50,15 +53,31 @@ export default function Perfil() {
         apellido: formData.apellido,
         email: formData.email,
       });
+
+      let updatedAvatarUrl = user.avatarUrl;
+
+      if (avatarFile) {
+        const formDataAvatar = new FormData();
+        formDataAvatar.append('archivo', avatarFile);
+        const resAvatar = await api.post(`/usuarios/${user.id}/avatar`, formDataAvatar, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        updatedAvatarUrl = resAvatar.data.avatarUrl;
+      }
+
       updateUser({
+        ...user,
         nombre: formData.nombre,
         apellido: formData.apellido,
         email: formData.email,
+        avatarUrl: updatedAvatarUrl
       });
       setEditing(false);
+      setAvatarFile(null);
       setStatus({ loading: false, error: null, success: true });
       setTimeout(() => setStatus(prev => ({ ...prev, success: false })), 3000);
     } catch (err) {
+      console.error(err);
       setStatus({ loading: false, error: 'Error al actualizar perfil', success: false });
     }
   };
@@ -138,6 +157,8 @@ export default function Perfil() {
               <div className="w-24 h-24 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-3xl font-black mb-4 shadow-inner overflow-hidden">
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                ) : user.avatarUrl ? (
+                  <img src={`http://localhost:8080/api/usuarios/avatar/${user.avatarUrl}`} alt="avatar" className="w-full h-full object-cover" />
                 ) : (
                   <span>{(user.nombre?.charAt(0) || '') + (user.apellido?.charAt(0) || '')}</span>
                 )}
