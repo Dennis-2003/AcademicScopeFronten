@@ -1,27 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  FileCheck2, UserPlus, Search, GraduationCap,
-  User, CheckCircle2, XCircle, ChevronRight, 
-  ChevronLeft, Users, AlertCircle, BookOpen, Trash2
+  UserPlus, Search, GraduationCap,
+  User, CheckCircle2, XCircle, Users, Trash2, IdCard, Loader2
 } from 'lucide-react';
+import api from '../../services/api';
 
-export default function GestionMatriculas() {
-  // Datos mockeados para demostración
-  const [estudiantes] = useState([
-    { id: 1, nombre: 'Juan', apellido: 'Pérez Gómez', dni: '71234567', estado: 'Sin Matrícula' },
-    { id: 2, nombre: 'María', apellido: 'López Ruiz', dni: '72345678', estado: 'Matriculada' },
-    { id: 3, nombre: 'Carlos', apellido: 'Sánchez Díaz', dni: '73456789', estado: 'Sin Matrícula' },
-  ]);
-
-  const [grados] = useState([
-    { id: 1, nombre: '1ro Secundaria', seccion: 'A', cupos: 30, ocupados: 25 },
-    { id: 2, nombre: '1ro Secundaria', seccion: 'B', cupos: 30, ocupados: 30 },
-    { id: 3, nombre: '2do Secundaria', seccion: 'A', cupos: 30, ocupados: 12 },
-  ]);
-
-  const [matriculasGlobales, setMatriculasGlobales] = useState([
-    { id: 101, estudiante: 'María López Ruiz', dni: '72345678', grado: '1ro Secundaria', seccion: 'A', fecha: '2026-02-15' }
-  ]);
+export default function GestionMatriculas({ isEmbedded = false }) {
+  const [estudiantes, setEstudiantes] = useState([]);
+  const [grados, setGrados] = useState([]);
+  const [matriculasGlobales, setMatriculasGlobales] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -30,11 +18,35 @@ export default function GestionMatriculas() {
   const [wizardStep, setWizardStep] = useState(1);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedGrado, setSelectedGrado] = useState(null);
+  const [seccionIngresada, setSeccionIngresada] = useState('');
+
+  useEffect(() => {
+    fetchDatos();
+  }, []);
+
+  const fetchDatos = async () => {
+    try {
+      setCargando(true);
+      const [estRes, gradosRes, matriculasRes] = await Promise.all([
+        api.get('/usuarios/rol/ESTUDIANTE'),
+        api.get('/grados'),
+        api.get('/matriculas')
+      ]);
+      setEstudiantes(estRes.data);
+      setGrados(gradosRes.data);
+      setMatriculasGlobales(matriculasRes.data);
+    } catch (error) {
+      console.error('Error al cargar datos de matrículas', error);
+    } finally {
+      setCargando(false);
+    }
+  };
 
   const openWizard = () => {
     setWizardStep(1);
     setSelectedStudent(null);
     setSelectedGrado(null);
+    setSeccionIngresada('');
     setIsWizardOpen(true);
   };
 
@@ -52,51 +64,81 @@ export default function GestionMatriculas() {
     setWizardStep(wizardStep - 1);
   };
 
-  const confirmarMatricula = () => {
-    const nuevaMatricula = {
-      id: Date.now(),
-      estudiante: `${selectedStudent.nombre} ${selectedStudent.apellido}`,
-      dni: selectedStudent.dni,
-      grado: selectedGrado.nombre,
-      seccion: selectedGrado.seccion,
-      fecha: new Date().toISOString().split('T')[0]
-    };
-    
-    setMatriculasGlobales([nuevaMatricula, ...matriculasGlobales]);
-    closeWizard();
-    // Simulate updating student status
-    selectedStudent.estado = 'Matriculada';
+  const confirmarMatricula = async () => {
+    try {
+      const payload = {
+        estudiante: { id: selectedStudent.id },
+        grado: { id: selectedGrado.id },
+        seccion: seccionIngresada || 'A' // Default a A si está vacío
+      };
+      
+      const res = await api.post('/matriculas', payload);
+      setMatriculasGlobales([res.data, ...matriculasGlobales]);
+      closeWizard();
+    } catch (error) {
+      console.error("Error al registrar matrícula", error);
+      alert("Hubo un error al registrar la matrícula.");
+    }
   };
 
-  const filteredMatriculas = matriculasGlobales.filter(m => 
-    m.estudiante.toLowerCase().includes(searchTerm.toLowerCase()) || m.dni.includes(searchTerm)
-  );
+  const eliminarMatricula = async (id) => {
+    if(!confirm("¿Estás seguro de eliminar esta matrícula?")) return;
+    try {
+      await api.delete(`/matriculas/${id}`);
+      setMatriculasGlobales(matriculasGlobales.filter(m => m.id !== id));
+    } catch (error) {
+      console.error("Error al eliminar", error);
+    }
+  };
+
+  // Filtrado
+  const filteredMatriculas = matriculasGlobales.filter(m => {
+    const nombreCompleto = `${m.estudiante?.nombre || ''} ${m.estudiante?.apellido || ''}`.toLowerCase();
+    const dni = m.estudiante?.dni || '';
+    return nombreCompleto.includes(searchTerm.toLowerCase()) || dni.includes(searchTerm);
+  });
+
+  const getMatriculasPorEstudiante = (estudianteId) => {
+    return matriculasGlobales.filter(m => m.estudiante?.id === estudianteId);
+  };
+
+  if (cargando) {
+    return (
+      <div className="flex items-center justify-center h-64 text-indigo-600">
+        <Loader2 className="animate-spin w-8 h-8" />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto animate-fade-in pb-12 font-sans relative">
+    <div className={isEmbedded ? "w-full animate-fade-in pb-12 font-sans" : "w-full max-w-[1200px] mx-auto animate-fade-in pb-12 font-sans"}>
       
-      <header className="mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-xs font-bold uppercase tracking-wider mb-3">
-            <FileCheck2 size={14} strokeWidth={2.5} />
-            Secretaría Académica
+      {!isEmbedded && (
+        <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-3">
+              <IdCard size={14} strokeWidth={2.5} />
+              Gestión Estudiantil
+            </div>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
+              Control de Matrículas
+            </h1>
+            <p className="text-slate-500 font-medium mt-2 text-sm md:text-base">
+              Asigna a los estudiantes a sus respectivos grados y secciones.
+            </p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
-            Gestión de Matrículas
-          </h1>
-          <p className="text-slate-500 font-medium mt-2 text-sm md:text-base">
-            Panel unificado para inscribir alumnos a un grado completo.
-          </p>
-        </div>
-
-        <button 
-          onClick={openWizard}
-          className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-[15px] bg-indigo-600 text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/30 hover:-translate-y-1"
-        >
-          <UserPlus size={22} strokeWidth={2.5} />
-          NUEVA MATRÍCULA
-        </button>
-      </header>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={openWizard}
+              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-[15px] bg-indigo-600 text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/20 hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <UserPlus size={20} strokeWidth={2.5} />
+              NUEVA MATRÍCULA
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* DASHBOARD PRINCIPAL */}
       <div className="bg-white rounded-2xl p-2 border border-slate-200/70 shadow-sm mb-6 flex flex-col sm:flex-row items-center gap-4">
@@ -116,7 +158,7 @@ export default function GestionMatriculas() {
         <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
           <h2 className="text-[15px] font-bold text-slate-700 flex items-center gap-2">
             <Users size={18} className="text-indigo-600"/>
-            Alumnos Matriculados en el Año Actual
+            Alumnos Matriculados
           </h2>
           <span className="text-xs font-bold px-3 py-1 rounded-full bg-indigo-100 text-indigo-700">
             {matriculasGlobales.length} Registros
@@ -138,24 +180,24 @@ export default function GestionMatriculas() {
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Estudiante</th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Documento</th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Grado y Sección</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Fecha</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Estado</th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredMatriculas.map(m => (
                   <tr key={m.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4 font-bold text-slate-800 text-[15px]">{m.estudiante}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-600">{m.dni}</td>
+                    <td className="px-6 py-4 font-bold text-slate-800 text-[15px]">{m.estudiante?.nombre} {m.estudiante?.apellido}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-slate-600">{m.estudiante?.dni}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100">
                         <GraduationCap size={14} />
-                        {m.grado} "{m.seccion}"
+                        {m.grado?.nombre} "{m.seccion}"
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-500">{m.fecha}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-slate-500">{m.estado}</td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Eliminar Matrícula">
+                      <button onClick={() => eliminarMatricula(m.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Eliminar Matrícula">
                         <Trash2 size={18} />
                       </button>
                     </td>
@@ -169,98 +211,71 @@ export default function GestionMatriculas() {
 
       {/* WIZARD MODAL */}
       {isWizardOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-2xl bg-white rounded-[2rem] overflow-hidden shadow-2xl flex flex-col h-[650px] animate-fade-in-up">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={closeWizard}></div>
+          <div className="w-full max-w-[600px] bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex flex-col max-h-[85vh] relative z-10 animate-fade-in-up border border-slate-200/60 overflow-hidden">
             
-            {/* Wizard Header */}
-            <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2">
-                  <UserPlus className="text-indigo-600" /> Asistente de Matrícula
-                </h3>
-                <button onClick={closeWizard} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors">
-                  <XCircle size={24} />
-                </button>
+            {/* Cabecera */}
+            <div className="px-8 py-6 flex items-center justify-between shrink-0 bg-white z-10">
+              <div>
+                <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">Nueva Matrícula</h3>
+                <p className="text-sm font-medium text-slate-500 mt-1">Paso {wizardStep} de 3</p>
               </div>
-
-              {/* Progress Bar */}
-              <div className="flex items-center gap-3">
-                <div className={`flex-1 h-2 rounded-full transition-all duration-500 ${wizardStep >= 1 ? 'bg-indigo-600' : 'bg-slate-200'}`}></div>
-                <div className={`flex-1 h-2 rounded-full transition-all duration-500 ${wizardStep >= 2 ? 'bg-indigo-600' : 'bg-slate-200'}`}></div>
-                <div className={`flex-1 h-2 rounded-full transition-all duration-500 ${wizardStep >= 3 ? 'bg-indigo-600' : 'bg-slate-200'}`}></div>
-              </div>
+              <button onClick={closeWizard} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
+                <XCircle size={24} strokeWidth={2} />
+              </button>
             </div>
 
-            {/* Wizard Content */}
-            <div className="flex-1 overflow-y-auto p-8 relative">
-              
-              {/* STEP 1: Seleccionar Estudiante */}
-              {wizardStep === 1 && (
-                <div className="animate-fade-in">
-                  <h4 className="text-xl font-bold text-slate-800 mb-6">1. Selecciona al Estudiante</h4>
-                  <div className="relative mb-6">
-                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="text" placeholder="Buscar por DNI o Apellidos..." className="w-full pl-11 pr-4 py-4 rounded-xl bg-white border-2 border-slate-200 focus:border-indigo-500 outline-none font-medium" />
-                  </div>
-                  <div className="space-y-3">
-                    {estudiantes.map(est => (
-                      <div 
-                        key={est.id} 
-                        onClick={() => setSelectedStudent(est)}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between ${selectedStudent?.id === est.id ? 'border-indigo-600 bg-indigo-50/50' : 'border-slate-100 hover:border-indigo-300'}`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${selectedStudent?.id === est.id ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                            <User size={20} />
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-800 text-[15px]">{est.apellido}, {est.nombre}</p>
-                            <p className="text-xs font-medium text-slate-500">DNI: {est.dni}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {est.estado === 'Matriculada' && <span className="text-[10px] uppercase font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded">Ya Matriculado</span>}
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedStudent?.id === est.id ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}`}>
-                            {selectedStudent?.id === est.id && <CheckCircle2 size={16} className="text-white" />}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+            {/* Barra de Progreso */}
+            <div className="w-full h-1 bg-slate-100 flex">
+              <div className="h-full bg-indigo-600 transition-all duration-500 ease-out" style={{ width: `${(wizardStep / 3) * 100}%` }}></div>
+            </div>
 
-              {/* STEP 2: Seleccionar Grado */}
-              {wizardStep === 2 && (
-                <div className="animate-fade-in">
-                  <h4 className="text-xl font-bold text-slate-800 mb-2">2. Asignar Grado y Sección</h4>
-                  <p className="text-sm font-medium text-slate-500 mb-6">El estudiante será inscrito automáticamente en todos los cursos del grado elegido.</p>
+            {/* Contenedor de Pasos */}
+            <div className="flex-1 overflow-y-auto px-8 py-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              
+              {/* PASO 1 */}
+              {wizardStep === 1 && (
+                <div className="animate-fade-in space-y-6">
+                  <div>
+                    <h4 className="text-[17px] font-bold text-slate-800">Selecciona al Estudiante</h4>
+                    <p className="text-sm text-slate-500">Busca el alumno que deseas matricular para este periodo.</p>
+                  </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {grados.map(g => {
-                      const isFull = g.ocupados >= g.cupos;
-                      const isSelected = selectedGrado?.id === g.id;
+                  <div className="space-y-3 pb-4">
+                    {estudiantes.map(est => {
+                      const isSelected = selectedStudent?.id === est.id;
+                      const matrAsociadas = getMatriculasPorEstudiante(est.id);
+                      const isMatriculado = matrAsociadas.length > 0;
                       return (
                         <div 
-                          key={g.id}
-                          onClick={() => !isFull && setSelectedGrado(g)}
-                          className={`p-5 rounded-2xl border-2 transition-all relative overflow-hidden ${isSelected ? 'border-indigo-600 bg-indigo-50/50' : isFull ? 'border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed' : 'border-slate-100 hover:border-indigo-300 cursor-pointer'}`}
+                          key={est.id} 
+                          onClick={() => setSelectedStudent(est)}
+                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center justify-between cursor-pointer group ${
+                            isSelected 
+                              ? 'border-indigo-600 bg-indigo-50/30 ring-1 ring-indigo-600' 
+                              : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50/50'
+                          }`}
                         >
-                          {isFull && <div className="absolute top-3 right-3 text-[10px] font-bold text-rose-600 bg-rose-100 px-2 py-0.5 rounded uppercase">Lleno</div>}
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className={`p-2.5 rounded-xl ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                              <BookOpen size={20} />
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'}`}>
+                              <User size={18} strokeWidth={2.5} />
                             </div>
-                            <h5 className="font-bold text-slate-800">{g.nombre}</h5>
-                          </div>
-                          <div className="flex items-end justify-between">
                             <div>
-                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sección</p>
-                              <p className="text-2xl font-black text-slate-800">"{g.seccion}"</p>
+                              <p className={`font-bold text-[15px] leading-tight mb-0.5 ${isSelected ? 'text-indigo-900' : 'text-slate-800'}`}>
+                                {est.apellido}, {est.nombre}
+                              </p>
+                              <p className="text-[13px] font-medium text-slate-500">DNI: {est.dni}</p>
                             </div>
-                            <div className="text-right">
-                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Cupos</p>
-                              <p className={`text-lg font-black ${isFull ? 'text-rose-600' : 'text-emerald-600'}`}>{g.cupos - g.ocupados}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {isMatriculado && (
+                              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-md">
+                                MATRICULADO
+                              </span>
+                            )}
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}`}>
+                              {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
                             </div>
                           </div>
                         </div>
@@ -270,27 +285,83 @@ export default function GestionMatriculas() {
                 </div>
               )}
 
-              {/* STEP 3: Confirmación */}
-              {wizardStep === 3 && (
-                <div className="animate-fade-in flex flex-col items-center justify-center h-full">
-                  <div className="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                    <CheckCircle2 size={40} />
+              {/* PASO 2 */}
+              {wizardStep === 2 && (
+                <div className="animate-fade-in space-y-6">
+                  <div>
+                    <h4 className="text-[17px] font-bold text-slate-800">Elige el Grado y Sección</h4>
+                    <p className="text-sm text-slate-500">Asigna el nivel educativo al estudiante {selectedStudent?.nombre}.</p>
                   </div>
-                  <h4 className="text-2xl font-black text-slate-800 mb-2">¡Todo listo para matricular!</h4>
-                  <p className="text-slate-500 font-medium text-center mb-8 max-w-sm">Revisa los datos antes de confirmar la inscripción en el sistema.</p>
                   
-                  <div className="w-full max-w-sm bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4">
-                    <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                      <span className="text-sm font-bold text-slate-400 uppercase">Alumno</span>
-                      <span className="text-sm font-bold text-slate-800">{selectedStudent?.nombre} {selectedStudent?.apellido}</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4">
+                    {grados.map(g => {
+                      const isSelected = selectedGrado?.id === g.id;
+                      return (
+                        <div 
+                          key={g.id}
+                          onClick={() => setSelectedGrado(g)}
+                          className={`p-5 rounded-xl border transition-all duration-200 relative group flex flex-col justify-between h-[100px] ${
+                            isSelected 
+                              ? 'border-indigo-600 bg-indigo-50/30 ring-1 ring-indigo-600' 
+                              : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50/50 cursor-pointer'
+                          }`}
+                        >
+                          <div>
+                            <h5 className={`font-bold text-[15px] ${isSelected ? 'text-indigo-900' : 'text-slate-800'}`}>{g.nombre}</h5>
+                            <p className="text-[13px] font-medium text-slate-500 mt-0.5">Nivel: {g.nivel}</p>
+                          </div>
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 hidden group-hover:flex group-hover:border-indigo-300'}`}>
+                              {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {selectedGrado && (
+                    <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Sección a asignar:</label>
+                      <input 
+                        type="text" 
+                        value={seccionIngresada}
+                        onChange={(e) => setSeccionIngresada(e.target.value.toUpperCase())}
+                        placeholder="Ej: A, B, C..."
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none"
+                        maxLength={10}
+                      />
                     </div>
-                    <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                      <span className="text-sm font-bold text-slate-400 uppercase">DNI</span>
-                      <span className="text-sm font-bold text-slate-800">{selectedStudent?.dni}</span>
+                  )}
+
+                </div>
+              )}
+
+              {/* PASO 3 */}
+              {wizardStep === 3 && (
+                <div className="animate-fade-in flex flex-col items-center justify-center py-6 h-full space-y-6">
+                  <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center border border-indigo-100">
+                    <CheckCircle2 size={40} strokeWidth={2} />
+                  </div>
+                  <div className="text-center">
+                    <h4 className="text-2xl font-black text-slate-800 tracking-tight">Casi listo</h4>
+                    <p className="text-slate-500 font-medium text-sm mt-2">Verifica los datos de la matrícula</p>
+                  </div>
+                  
+                  <div className="w-full max-w-[400px] bg-slate-50/50 border border-slate-200 rounded-xl p-5 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[13px] font-semibold text-slate-500">Estudiante</span>
+                      <span className="text-[14px] font-bold text-slate-800">{selectedStudent?.nombre} {selectedStudent?.apellido}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-bold text-slate-400 uppercase">Asignación</span>
-                      <span className="text-sm font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded">{selectedGrado?.nombre} "{selectedGrado?.seccion}"</span>
+                      <span className="text-[13px] font-semibold text-slate-500">DNI</span>
+                      <span className="text-[14px] font-bold text-slate-800">{selectedStudent?.dni}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-4 border-t border-slate-200">
+                      <span className="text-[13px] font-semibold text-slate-500">Grado Asignado</span>
+                      <span className="text-[14px] font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded">
+                        {selectedGrado?.nombre} "{seccionIngresada || 'A'}"
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -298,25 +369,25 @@ export default function GestionMatriculas() {
 
             </div>
 
-            {/* Wizard Footer / Navigation */}
-            <div className="px-8 py-5 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+            {/* Footer */}
+            <div className="px-8 py-5 border-t border-slate-100 bg-white flex items-center justify-between shrink-0">
               {wizardStep > 1 ? (
-                <button onClick={handlePrev} className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
-                  <ChevronLeft size={18} /> Atrás
+                <button onClick={handlePrev} className="px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-600 hover:bg-slate-100 transition-colors">
+                  Volver atrás
                 </button>
               ) : <div></div>}
 
               {wizardStep < 3 ? (
                 <button 
                   onClick={handleNext} 
-                  disabled={(wizardStep === 1 && !selectedStudent) || (wizardStep === 2 && !selectedGrado)}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-md"
+                  disabled={(wizardStep === 1 && !selectedStudent) || (wizardStep === 2 && (!selectedGrado || seccionIngresada.trim() === ''))}
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-colors shadow-sm"
                 >
-                  Continuar <ChevronRight size={18} />
+                  Continuar
                 </button>
               ) : (
-                <button onClick={confirmarMatricula} className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 animate-pulse">
-                  <CheckCircle2 size={18} /> CONFIRMAR MATRÍCULA
+                <button onClick={confirmarMatricula} className="px-6 py-2.5 rounded-xl font-bold text-sm text-white bg-slate-900 hover:bg-black transition-colors shadow-sm shadow-slate-900/20">
+                  Confirmar Matrícula
                 </button>
               )}
             </div>

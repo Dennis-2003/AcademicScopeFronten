@@ -41,9 +41,9 @@ export default class ErrorBoundary extends Component {
                 <Home size={16} /> Ir al inicio
               </button>
             </div>
-            {this.props.showError && (
-              <details className="mt-6 text-left">
-                <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-600">Ver detalle técnico</summary>
+            {true && (
+              <details open className="mt-6 text-left w-full">
+                <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-600 font-bold uppercase mb-2">Detalle Técnico del Error:</summary>
                 <pre className="mt-2 text-xs text-red-600 bg-red-50 p-4 rounded-xl overflow-auto max-h-32">
                   {this.state.error?.message}
                 </pre>

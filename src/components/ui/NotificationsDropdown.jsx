@@ -15,9 +15,13 @@ export default function NotificationsDropdown() {
   const ref = useRef(null);
 
   useEffect(() => {
-    api.get('/notificaciones')
-      .then(r => setNotis(r.data || []))
-      .catch(() => {});
+    const userStr = sessionStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      api.get(`/notificaciones/usuario/${user.id}`)
+        .then(r => setNotis(r.data || []))
+        .catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -28,7 +32,7 @@ export default function NotificationsDropdown() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const sinLeer = notis.filter(n => !n.leida).length;
+  const sinLeer = (notis || []).filter(n => !n?.leida).length;
 
   return (
     <div className="relative" ref={ref}>
@@ -53,12 +57,12 @@ export default function NotificationsDropdown() {
             )}
           </div>
           <div className="max-h-80 overflow-y-auto">
-            {notis.length === 0 ? (
+            {(notis || []).length === 0 ? (
               <div className="text-center py-8 text-sm font-medium text-slate-400">
                 Sin notificaciones
               </div>
-            ) : notis.slice(0, 10).map(n => (
-              <div key={n.id} className={`flex items-start gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 ${!n.leida ? 'bg-indigo-50/40' : ''}`}>
+            ) : (notis || []).slice(0, 10).map(n => (
+              <div key={n?.id} className={`flex items-start gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 ${!n?.leida ? 'bg-indigo-50/40' : ''}`}>
                 <div className="mt-0.5">{ICONS[n.tipo] || ICONS.INFO}</div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm ${!n.leida ? 'font-bold' : 'font-medium'} text-slate-800 truncate`}>

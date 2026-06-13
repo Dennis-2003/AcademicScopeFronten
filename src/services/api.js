@@ -6,10 +6,9 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(config => {
-  const auth = sessionStorage.getItem('auth');
-  if (auth) {
-    const { dni, password } = JSON.parse(auth);
-    config.auth = { username: dni, password };
+  const token = sessionStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -17,9 +16,10 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   response => response,
   error => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       sessionStorage.removeItem('auth');
       sessionStorage.removeItem('user');
+      sessionStorage.removeItem('token');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 export default function Perfil() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '', apellido: '', email: '',
@@ -45,6 +45,12 @@ export default function Perfil() {
     setStatus({ loading: true, error: null, success: false });
     try {
       await api.put(`/usuarios/${user.id}`, {
+        ...user,
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        email: formData.email,
+      });
+      updateUser({
         nombre: formData.nombre,
         apellido: formData.apellido,
         email: formData.email,

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
+import CambiarPasswordInicial from './pages/CambiarPasswordInicial';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import DashboardIndex from './pages/DashboardIndex';
@@ -52,6 +53,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardLayout />}>
               <Route index element={<DashboardIndex />} />
+              <Route path="cambiar-password-inicial" element={<CambiarPasswordInicial />} />
               <Route path="perfil" element={<Perfil />} />
               
               {/* Rutas solo DOCENTE y ADMIN */}

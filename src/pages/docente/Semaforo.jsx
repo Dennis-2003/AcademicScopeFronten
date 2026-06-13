@@ -25,7 +25,7 @@ export default function Semaforo() {
     }
   }, [cursoSeleccionado]);
 
-  const cargarCursos = async () => {
+  async function cargarCursos() {
     try {
       const data = await obtenerCursosPorDocente(user.id);
       setCursos(data);
@@ -37,7 +37,7 @@ export default function Semaforo() {
     }
   };
 
-  const cargarEstudiantes = async (cursoId) => {
+  async function cargarEstudiantes(cursoId) {
     setCargando(true);
     try {
       const matriculas = await obtenerMatriculasPorCurso(cursoId);

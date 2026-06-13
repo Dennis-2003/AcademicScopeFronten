@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
@@ -8,63 +9,63 @@ import TutorDashboard from "./dashboards/TutorDashboard";
 import {
   Users,
   GraduationCap,
-  BookOpen,
   UserCheck,
-  TrendingUp,
+  BookMarked,
   Activity,
   Clock,
-  ChevronRight,
-  BookMarked,
-  Settings,
+  Calendar,
   MoreVertical,
-  Calendar
+  ChevronDown,
+  MessageSquare,
+  X,
+  Send
 } from "lucide-react";
 
 // --- Helpers ---
+function catmullRom2bezier(pts) {
+  if (pts.length === 0) return "";
+  if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`;
+  let result = `M ${pts[0].x},${pts[0].y} `;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = i === 0 ? pts[0] : pts[i - 1];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = i + 2 < pts.length ? pts[i + 2] : p2;
 
-function computeOccupation(stats) {
-  return [
-    { label: "Cursos activos",       value: stats.cursos, pct: Math.min(100, Math.round((stats.cursos / 40) * 100)),  color: "#6366f1" },
-    { label: "Usuarios conectados",  value: stats.estudiantes + stats.docentes + stats.tutores, pct: Math.min(100, Math.round(((stats.estudiantes + stats.docentes + stats.tutores) / 500) * 100)), color: "#10b981" },
-    { label: "Asistencia promedio",  value: "—", pct: 89,  color: "#3b82f6" },
-    { label: "Tareas entregadas",    value: "—", pct: 74,  color: "#f59e0b" },
-  ];
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    result += `C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y} `;
+  }
+  return result;
 }
+
+// --- Components ---
 
 function WelcomeBanner({ user, fechaStr }) {
   return (
-    <div className="relative w-full rounded-[2rem] overflow-hidden mb-10 animate-slide-up shadow-2xl bg-slate-950">
+    <div className="relative w-full mb-8 rounded-[1.25rem] p-6 md:p-8 overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-gradient-bg shadow-[0_8px_30px_rgb(99,102,241,0.2)] border border-indigo-500 group">
       
-      {/* Animated Aurora Blobs */}
-      <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-600 rounded-full mix-blend-screen filter blur-[80px] opacity-60 animate-blob"></div>
-      <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-screen filter blur-[80px] opacity-60 animate-blob animation-delay-2000"></div>
-      <div className="absolute -bottom-8 left-20 w-72 h-72 bg-fuchsia-600 rounded-full mix-blend-screen filter blur-[80px] opacity-60 animate-blob animation-delay-4000"></div>
+      {/* Animated Background Elements */}
+      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+      <div className="absolute bottom-0 left-10 -mb-10 w-40 h-40 rounded-full bg-indigo-400 opacity-20 blur-2xl group-hover:translate-x-10 transition-transform duration-1000"></div>
+      <div className="absolute top-1/2 right-1/4 w-32 h-32 rounded-full bg-fuchsia-500 opacity-20 blur-3xl animate-pulse"></div>
       
-      {/* Frosted Glass Overlay */}
-      <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-3xl border border-white/10"></div>
-      
-      <div className="relative p-8 md:p-12 flex flex-col md:flex-row items-center justify-between z-10">
-        <div className="text-white">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 backdrop-blur-md text-slate-300 text-xs font-bold uppercase tracking-wider mb-5 border border-white/10 shadow-inner">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span>
-            Panel de Administración
+      <div className="relative z-10 flex items-center justify-between">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-indigo-50 text-xs font-extrabold tracking-wider border border-white/20 mb-4 shadow-sm backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Panel de Control Principal
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
-            Bienvenido, <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-purple-400">{user.nombre}</span> <span className="inline-block origin-[70%_70%] hover:rotate-12 transition-transform cursor-default text-white">👋</span>
+          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white mb-2 drop-shadow-md">
+            Bienvenido de vuelta, {user.nombre}
           </h1>
-          <p className="text-slate-400 font-medium text-base md:text-lg">
-            {fechaStr} — Tienes un excelente día por delante.
+          <p className="text-indigo-100 font-medium text-sm md:text-base opacity-90">
+            {fechaStr} — Todo está listo para gestionar tu institución.
           </p>
-        </div>
-        <div className="hidden md:flex mt-6 md:mt-0 relative group perspective-1000">
-           {/* Futuristic Glowing Icon Container */}
-           <div className="relative w-32 h-32 flex items-center justify-center transform group-hover:scale-105 transition-all duration-700">
-              <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-purple-600 rounded-[2rem] blur-xl opacity-40 group-hover:opacity-70 transition-opacity duration-700"></div>
-              <div className="relative w-full h-full bg-slate-900/80 backdrop-blur-xl rounded-[2rem] border border-white/10 flex items-center justify-center shadow-2xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                <Activity size={56} className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" strokeWidth={1.5} />
-              </div>
-           </div>
         </div>
       </div>
     </div>
@@ -72,8 +73,7 @@ function WelcomeBanner({ user, fechaStr }) {
 }
 
 function StatCard({ stat, animated }) {
-  const { label, value, pct, trend, trendLabel, color, bg, Icon } = stat;
-  const [barW, setBarW] = useState(0);
+  const { label, value, trendLabel, color, bg, Icon, prefix } = stat;
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -85,43 +85,123 @@ function StatCard({ stat, animated }) {
       setCount(c);
       if (c >= value) clearInterval(t);
     }, 40);
-    const b = setTimeout(() => setBarW(pct), 200);
-    return () => { clearInterval(t); clearTimeout(b); };
-  }, [animated, value, pct]);
+    return () => clearInterval(t);
+  }, [animated, value]);
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm" style={{ backgroundColor: bg, color }}>
-            <Icon size={24} strokeWidth={2} className="transition-transform group-hover:scale-110" />
-          </div>
+    <div className="bg-white rounded-[1.25rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 transform hover:-translate-y-1">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-[28px] font-extrabold text-slate-800 tracking-tight leading-none mb-2">
+            {prefix}{animated ? count : value}
+          </h3>
+          <p className="text-[13px] font-bold text-slate-400">{label}</p>
         </div>
-        <div className={`px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1`} style={{ backgroundColor: `${color}15`, color }}>
-          {trend === 'up' ? <TrendingUp size={14} /> : <Activity size={14} />}
-          {trendLabel}
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm" style={{ backgroundColor: bg, color }}>
+          <Icon size={22} strokeWidth={2.5} />
         </div>
       </div>
       
-      <div>
-        <h3 className="text-3xl font-bold text-slate-800 tracking-tight">
-          {animated ? count : value}
-        </h3>
-        <p className="text-sm font-medium text-slate-500 mt-1">{label}</p>
+      <div className="mt-6 flex items-center gap-2">
+        <div className="px-2.5 py-1 rounded-lg text-xs font-extrabold tracking-wide" style={{ backgroundColor: color, color: '#fff' }}>
+          {trendLabel}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SmoothAreaChart({ data }) {
+  if (!data || !data.meses || data.meses.length === 0) {
+    return <div className="h-[250px] flex items-center justify-center text-slate-400 font-medium bg-slate-50 rounded-xl mt-4">Cargando datos...</div>;
+  }
+
+  const w = 400, h = 200, ox = 40, oy = 20;
+  const n = data.meses.length;
+  const step = (w - ox) / Math.max(1, n - 1);
+  const maxVal = Math.max(10, ...data.cursosActivos) * 1.2;
+
+  const pts = data.cursosActivos.map((v, i) => ({
+    x: ox + i * step,
+    y: h - oy - (v / maxVal) * (h - oy * 2)
+  }));
+
+  const pathD = catmullRom2bezier(pts);
+  const fillD = `${pathD} L ${pts[pts.length - 1].x},${h - oy} L ${pts[0].x},${h - oy} Z`;
+
+  return (
+    <div className="w-full mt-6">
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto overflow-visible">
+        <defs>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4"/>
+            <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0"/>
+          </linearGradient>
+        </defs>
+        
+        {/* Y Axis Labels */}
+        {[0, 0.25, 0.5, 0.75, 1].map(pct => {
+          const val = Math.round(maxVal * pct);
+          const y = h - oy - pct * (h - oy * 2);
+          return (
+            <g key={pct}>
+              <text x={ox - 10} y={y + 4} fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="end">{val}</text>
+              <line x1={ox} y1={y} x2={w} y2={y} stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+            </g>
+          );
+        })}
+
+        {/* Fill and Line */}
+        <path d={fillD} fill="url(#areaGrad)" />
+        <path d={pathD} fill="none" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
+function DoubleBarChart({ data }) {
+  if (!data || !data.meses || data.meses.length === 0) {
+    return <div className="h-[250px] flex items-center justify-center text-slate-400 font-medium bg-slate-50 rounded-xl mt-4">Cargando datos...</div>;
+  }
+
+  const bars = data.meses.map((mes, i) => {
+    const ingresos = data.cursosActivos[i] || 0;
+    const gastos = data.asistenciaMedia[i] || 0;
+    return {
+      label: mes,
+      top: ingresos,
+      bottom: gastos
+    };
+  });
+
+  const maxVal = Math.max(...bars.map(b => Math.max(b.top, b.bottom)));
+
+  return (
+    <div className="w-full mt-6 h-[200px] flex items-stretch justify-between px-2">
+      {/* Y Axis pseudo labels */}
+      <div className="flex flex-col justify-between text-[10px] font-bold text-slate-400 py-4 h-full pr-4 text-right">
+        <span>80k</span>
+        <span>53k</span>
+        <span>27k</span>
+        <span>0k</span>
+        <span>-27k</span>
+        <span>-53k</span>
+        <span>-80k</span>
       </div>
 
-      <div className="mt-5">
-        <div className="flex justify-between items-center mb-1.5">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Progreso</span>
-          <span className="text-xs font-bold text-slate-700">{pct}%</span>
+      {bars.map((bar, i) => (
+        <div key={i} className="flex flex-col items-center w-full relative h-full">
+          {/* Middle zero line */}
+          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-slate-100 z-0"></div>
+          
+          <div className="flex-1 flex flex-col justify-end items-center pb-1 w-full z-10">
+            <div className="w-3 md:w-4 bg-indigo-500 rounded-full" style={{ height: `${(bar.top / maxVal) * 90}%` }}></div>
+          </div>
+          <div className="flex-1 flex flex-col justify-start items-center pt-1 w-full z-10">
+            <div className="w-3 md:w-4 bg-rose-500 rounded-full" style={{ height: `${(bar.bottom / maxVal) * 90}%` }}></div>
+          </div>
         </div>
-        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-          <div 
-            className="h-full rounded-full transition-all duration-1000 ease-out" 
-            style={{ width: `${barW}%`, backgroundColor: color }} 
-          />
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
@@ -131,163 +211,163 @@ function QuickLink({ item, onClick }) {
   return (
     <button 
       onClick={onClick} 
-      className="w-full bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-2xl p-5 text-left transition-all hover:-translate-y-1 hover:shadow-lg hover:border-slate-300 group relative overflow-hidden"
+      className="w-full bg-white rounded-2xl border border-slate-100 p-5 text-left transition-all hover:-translate-y-1 hover:shadow-lg shadow-sm flex items-center gap-4"
     >
-      {/* Hover glow effect */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
-      <div className="flex justify-between items-center mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: bg, color }}>
-          <Icon size={20} strokeWidth={2} />
-        </div>
-        <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-600 transition-colors" />
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: bg, color }}>
+        <Icon size={24} strokeWidth={2.5} />
       </div>
-      <h4 className="text-[15px] font-bold text-slate-800">{label}</h4>
-      <p className="text-xs font-medium text-slate-500 mt-1">{desc}</p>
+      <div className="flex-1">
+        <h4 className="text-[15px] font-bold text-slate-800 leading-tight">{label}</h4>
+        <p className="text-xs font-medium text-slate-500 mt-1">{desc}</p>
+      </div>
     </button>
   );
 }
 
-function ActivityItem({ item }) {
-  const { initials, name, code, role, time, color, bg } = item;
-  return (
-    <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-default">
-      <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0" style={{ backgroundColor: bg, color }}>
-        {initials}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-bold text-slate-800 truncate">{name}</div>
-        <div className="text-xs font-medium text-slate-500 mt-0.5">{code}</div>
-      </div>
-      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider" style={{ backgroundColor: bg, color }}>
-          {role}
-        </span>
-        <span className="text-[11px] font-medium text-slate-400">{time}</span>
-      </div>
-    </div>
-  );
-}
+function NotificationModal({ isOpen, onClose, usuarios }) {
+  const [destinatarioId, setDestinatarioId] = useState("");
+  const [titulo, setTitulo] = useState("");
+  const [mensaje, setMensaje] = useState("");
+  const [status, setStatus] = useState({ loading: false, error: null, success: false });
 
-function OccupationBar({ item, animated }) {
-  const [w, setW] = useState(0);
-  useEffect(() => {
-    if (!animated) return;
-    const t = setTimeout(() => setW(item.pct), 300);
-    return () => clearTimeout(t);
-  }, [animated, item.pct]);
+  if (!isOpen) return null;
 
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-[13px] font-semibold text-slate-600">{item.label}</span>
-        <span className="text-[13px] font-bold text-slate-800">{item.value}</span>
-      </div>
-      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-[1500ms] ease-out"
-          style={{ width: `${w}%`, backgroundColor: item.color }}
-        />
-      </div>
-    </div>
-  );
-}
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus({ loading: true, error: null, success: false });
+    try {
+      await api.post('/notificaciones', {
+        usuario: { id: parseInt(destinatarioId) },
+        titulo,
+        mensaje,
+        fechaEnvio: new Date().toISOString(),
+        leido: false
+      });
+      setStatus({ loading: false, error: null, success: true });
+      setTimeout(() => {
+        setStatus({ loading: false, error: null, success: false });
+        onClose();
+        setDestinatarioId("");
+        setTitulo("");
+        setMensaje("");
+      }, 1500);
+    } catch (error) {
+      setStatus({ loading: false, error: "Error al enviar notificación", success: false });
+    }
+  };
 
-function MinimalClock() {
-  const [time, setTime] = useState(new Date());
-  
-  useEffect(() => {
-    const id = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const pad = n => String(n).padStart(2, "0");
-
-  return (
-    <div className="bg-slate-50 rounded-2xl border border-slate-100 p-6 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center border border-slate-200 text-indigo-500">
-          <Clock size={24} strokeWidth={2} />
-        </div>
-        <div>
-          <div className="text-2xl font-bold text-slate-800 tracking-tight">
-            {pad(time.getHours())}:{pad(time.getMinutes())}
-            <span className="text-slate-400 text-lg ml-1 font-semibold">:{pad(time.getSeconds())}</span>
+  return createPortal(
+    <div 
+      style={{ 
+        position: 'fixed', 
+        bottom: '24px', 
+        right: '24px', 
+        width: '380px', 
+        maxHeight: 'calc(100vh - 48px)',
+        backgroundColor: '#ffffff', 
+        borderRadius: '24px', 
+        boxShadow: '0 25px 50px -12px rgba(103, 80, 164, 0.25), 0 0 0 1px rgba(103, 80, 164, 0.1)',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        animation: 'slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+      }}
+    >
+      {/* Fixed Header */}
+      <div style={{ padding: '24px 24px 20px 24px', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', backgroundColor: '#fff', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'rgba(103, 80, 164, 0.1)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MessageSquare size={24} fill="currentColor" />
           </div>
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Hora Local</div>
-        </div>
-      </div>
-      <Calendar size={24} className="text-slate-300" strokeWidth={1.5} />
-    </div>
-  );
-}
-
-function ModernSparkChart({ data }) {
-  if (!data || !data.meses || data.meses.length === 0) {
-    return (
-      <div className="w-full mt-4 h-[200px] flex items-center justify-center text-sm font-medium text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-        Cargando estadísticas...
-      </div>
-    );
-  }
-
-  const w = 300, h = 120, ox = 30;
-  const n = data.meses.length;
-  const step = (w - ox) / Math.max(1, n - 1);
-  
-  const maxCourses = Math.max(10, ...data.cursosActivos) * 1.2; // 20% padding top
-  const maxAtt = 100;
-
-  const getY = (val, max) => h - (val / Math.max(max, 1)) * h;
-
-  const pts1 = data.cursosActivos.map((v, i) => `${ox + i * step},${getY(v, maxCourses)}`).join(" ");
-  const pts2 = data.asistenciaMedia.map((v, i) => `${ox + i * step},${getY(v, maxAtt)}`).join(" ");
-  
-  const fill1 = `${pts1} ${w},${h} ${ox},${h}`;
-  const fill2 = `${pts2} ${w},${h} ${ox},${h}`;
-
-  return (
-    <div className="w-full mt-4">
-      <div className="flex gap-6 mb-6">
-        {[["#6366f1", "Cursos Activos"], ["#10b981", "Asistencia Media"]].map(([c, l]) => (
-          <div key={l} className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-wider">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c }} />
-            {l}
+          <div>
+            <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: '0 0 2px 0' }}>Nuevo Mensaje</h2>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: 0, fontWeight: '500' }}>Envío directo al sistema</p>
           </div>
-        ))}
+        </div>
+        <button 
+          onClick={onClose} 
+          style={{ background: '#f8f7fc', border: 'none', cursor: 'pointer', color: '#64748b', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
+          onMouseOver={e => e.currentTarget.style.background = '#e2e8f0'}
+          onMouseOut={e => e.currentTarget.style.background = '#f8f7fc'}
+        >
+          <X size={18} />
+        </button>
       </div>
-      <svg viewBox="0 0 300 140" className="w-full h-auto overflow-visible" style={{ maxHeight: '200px' }}>
-        <defs>
-          <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.2"/><stop offset="100%" stopColor="#6366f1" stopOpacity="0"/>
-          </linearGradient>
-          <linearGradient id="grad2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.2"/><stop offset="100%" stopColor="#10b981" stopOpacity="0"/>
-          </linearGradient>
-        </defs>
-        
-        {/* Grid lines */}
-        {[0, 40, 80, 120].map(y => (
-          <line key={y} x1={ox} y1={y} x2={w} y2={y} stroke="#f1f5f9" strokeWidth="1.5" />
-        ))}
-        
-        {/* X Axis Labels */}
-        {data.meses.map((m, i) => (
-          <text key={i} x={ox + i * step} y={138} fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">{m}</text>
-        ))}
-        
-        {/* Fills */}
-        <polygon points={fill1} fill="url(#grad1)" />
-        <polygon points={fill2} fill="url(#grad2)" />
-        
-        {/* Lines */}
-        <polyline points={pts1} fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-draw-line" />
-        <polyline points={pts2} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-draw-line" style={{ animationDelay: '200ms' }} />
-        
-        {/* Points for current month */}
-        <circle cx={ox + (n - 1) * step} cy={getY(data.cursosActivos[n - 1], maxCourses)} r="5" fill="#ffffff" stroke="#6366f1" strokeWidth="3" />
-        <circle cx={ox + (n - 1) * step} cy={getY(data.asistenciaMedia[n - 1], maxAtt)} r="5" fill="#ffffff" stroke="#10b981" strokeWidth="3" />
-      </svg>
-    </div>
+
+      {/* Scrollable Body */}
+      <div className="custom-scrollbar" style={{ padding: '24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {status.success && (
+          <div style={{ marginBottom: '20px', backgroundColor: '#ecfdf5', color: '#047857', padding: '12px', borderRadius: '12px', border: '1px solid #a7f3d0', fontSize: '13px', fontWeight: 'bold', textAlign: 'center' }}>
+            ¡Comunicado enviado con éxito!
+          </div>
+        )}
+        {status.error && (
+          <div style={{ marginBottom: '20px', backgroundColor: '#fef2f2', color: '#b91c1c', padding: '12px', borderRadius: '12px', border: '1px solid #fecaca', fontSize: '13px', fontWeight: 'bold', textAlign: 'center' }}>
+            {status.error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Destinatario</label>
+            <select 
+              required
+              value={destinatarioId}
+              onChange={e => setDestinatarioId(e.target.value)}
+              className="form-control"
+              style={{ backgroundColor: '#f8f7fc', border: '1px solid transparent', padding: '14px', borderRadius: '12px', fontSize: '14px' }}
+            >
+              <option value="">Seleccione un usuario...</option>
+              {usuarios.map(u => (
+                <option key={u.id} value={u.id}>{u.nombre} {u.apellido} - {u.rol}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Asunto</label>
+            <input 
+              required
+              type="text"
+              value={titulo}
+              onChange={e => setTitulo(e.target.value)}
+              placeholder="Ej: Reunión de Padres"
+              className="form-control"
+              style={{ backgroundColor: '#f8f7fc', border: '1px solid transparent', padding: '14px', borderRadius: '12px', fontSize: '14px' }}
+            />
+          </div>
+          
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Mensaje</label>
+            <textarea 
+              required
+              value={mensaje}
+              onChange={e => setMensaje(e.target.value)}
+              placeholder="Escribe los detalles aquí..."
+              className="form-control custom-scrollbar"
+              style={{ backgroundColor: '#f8f7fc', border: '1px solid transparent', padding: '14px', borderRadius: '12px', resize: 'none', height: '100px', fontSize: '14px' }}
+            ></textarea>
+          </div>
+          
+          <div style={{ marginTop: '8px' }}>
+            <button 
+              type="submit" 
+              disabled={status.loading}
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '14px', justifyContent: 'center' }}
+            >
+              {status.loading ? "Enviando..." : (
+                <>
+                  <Send size={18} /> Enviar Ahora
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -312,9 +392,11 @@ function AdminDashboard({ user }) {
   const navigate = useNavigate();
   const [animated, setAnimated] = useState(false);
   const [stats, setStats]   = useState({ estudiantes: 0, docentes: 0, tutores: 0, cursos: 0 });
-  const [usuarios, setUsuarios] = useState([]);
   const [chartData, setChartData] = useState(null);
-  const [eventos, setEventos] = useState([]);
+  
+  // Notification Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [usuariosList, setUsuariosList] = useState([]);
 
   useEffect(() => {
     const t = setTimeout(() => setAnimated(true), 50);
@@ -327,44 +409,25 @@ function AdminDashboard({ user }) {
       api.get('/usuarios/rol/DOCENTE').catch(() => ({ data: [] })),
       api.get('/usuarios/rol/TUTOR').catch(() => ({ data: [] })),
       api.get('/cursos').catch(() => ({ data: [] })),
-      api.get('/dashboard/rendimiento').catch(() => ({ data: null })),
-      api.get('/eventos').catch(() => ({ data: [] }))
-    ]).then(([e, d, t, c, r, ev]) => {
+      api.get('/dashboard/rendimiento').catch(() => ({ data: null }))
+    ]).then(([e, d, t, c, r]) => {
       setStats({ estudiantes: e.data.length, docentes: d.data.length, tutores: t.data.length, cursos: c.data.length });
-      const all = [...e.data, ...d.data, ...t.data];
-      setUsuarios(all.slice(0, 4));
+      setUsuariosList([...e.data, ...d.data, ...t.data]);
       if (r && r.data) setChartData(r.data);
-      setEventos(ev.data || []);
     });
   }, []);
 
   const STATS = [
-    { id: "students", label: "Estudiantes Activos", value: stats.estudiantes, pct: 33, trend: "stable", trendLabel: "Estable", color: "#6366f1", bg: "#6366f115", Icon: GraduationCap },
-    { id: "courses", label: "Cursos Registrados", value: stats.cursos, pct: 95, trend: "up", trendLabel: "+12%", color: "#10b981", bg: "#10b98115", Icon: BookMarked },
-    { id: "teachers", label: "Plana Docente", value: stats.docentes, pct: 100, trend: "stable", trendLabel: "Estable", color: "#f43f5e", bg: "#f43f5e15", Icon: UserCheck },
-    { id: "tutors", label: "Tutores Asignados", value: stats.tutores, pct: 100, trend: "stable", trendLabel: "Estable", color: "#3b82f6", bg: "#3b82f615", Icon: Users },
+    { id: "students", label: "Total Students", value: stats.estudiantes, trendLabel: "8.72%", color: "#6366f1", bg: "#6366f115", Icon: GraduationCap, prefix: "" },
+    { id: "courses", label: "Active Courses", value: stats.cursos, trendLabel: "7.36%", color: "#10b981", bg: "#10b98115", Icon: BookMarked, prefix: "" },
+    { id: "teachers", label: "Total Teachers", value: stats.docentes, trendLabel: "5.62%", color: "#f43f5e", bg: "#f43f5e15", Icon: UserCheck, prefix: "" },
+    { id: "tutors", label: "Total Tutors", value: stats.tutores, trendLabel: "2.53%", color: "#0ea5e9", bg: "#0ea5e915", Icon: Users, prefix: "" },
   ];
 
-  const ACTIVITY = usuarios.map(u => {
-    let color = "#6366f1", bg = "#6366f115";
-    if (u.rol === 'DOCENTE') { color = "#f43f5e"; bg = "#f43f5e15"; }
-    else if (u.rol === 'TUTOR') { color = "#10b981"; bg = "#10b98115"; }
-    
-    return {
-      initials: (u.nombre?.charAt(0) || '') + (u.apellido?.charAt(0) || ''),
-      name: `${u.apellido}, ${u.nombre}`,
-      code: u.dni,
-      role: u.rol === 'ESTUDIANTE' ? 'Estudiante' : u.rol === 'DOCENTE' ? 'Docente' : u.rol === 'TUTOR' ? 'Tutor' : u.rol,
-      time: 'Hace un momento',
-      color, bg
-    };
-  });
-
   const QUICK_LINKS = [
-    { label: "Gestión de Cursos",  desc: "Administrar grados y secciones", Icon: BookOpen, color: "#6366f1", bg: "#6366f115", to: "/dashboard/admin/cursos" },
-    { label: "Directorio",         desc: "Usuarios y roles del sistema",   Icon: Users, color: "#10b981", bg: "#10b98115", to: "/dashboard/admin/usuarios" },
-    { label: "Matrículas",         desc: "Proceso de inscripción actual",  Icon: Activity, color: "#f59e0b", bg: "#f59e0b15", to: "/dashboard/admin/matriculas" },
-    { label: "Configuración",      desc: "Ajustes globales del periodo",   Icon: Settings, color: "#64748b", bg: "#64748b15", to: "/dashboard" },
+    { label: "Gestión de Cursos",  desc: "Administrar grados y secciones", Icon: BookMarked, color: "#6366f1", bg: "#6366f115", to: "/dashboard/admin/cursos" },
+    { label: "Directorio", desc: "Administrar profesores y estudiantes",   Icon: Users, color: "#10b981", bg: "#10b98115", to: "/dashboard/admin/usuarios" },
+    { label: "Matrículas",         desc: "Inscripciones activas",  Icon: Activity, color: "#f59e0b", bg: "#f59e0b15", to: "/dashboard/admin/matriculas" }
   ];
 
   const hoy = new Date();
@@ -372,122 +435,67 @@ function AdminDashboard({ user }) {
   const fechaStr = hoy.toLocaleDateString('es-ES', options);
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto animate-fade-in pb-12 font-sans">
+    <div className="w-full max-w-[1400px] mx-auto animate-fade-in pb-12 font-sans bg-slate-50/50 min-h-screen px-4 md:px-8 pt-6 relative">
       
       <WelcomeBanner user={user} fechaStr={fechaStr} />
 
       {/* --- STATS GRID --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-slide-up animate-delay-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-slide-up">
         {STATS.map((s) => (
           <StatCard key={s.id} stat={s} animated={animated} />
         ))}
       </div>
 
-      {/* --- MAIN CONTENT GRID --- */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8">
+      {/* --- CHARTS GRID --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         
-        {/* Left Column */}
-        <div className="flex flex-col gap-8 animate-slide-up animate-delay-200">
+        {/* REVENUE CHART */}
+        <section className="bg-white rounded-[1.25rem] p-6 md:p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-slide-up animate-delay-100">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">Rendimiento (Cursos)</h2>
+            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors">
+              Mes <ChevronDown size={14} />
+            </div>
+          </div>
+          <SmoothAreaChart data={chartData} />
+        </section>
+
+        {/* EXPENSES CHART */}
+        <section className="bg-white rounded-[1.25rem] p-6 md:p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-slide-up animate-delay-200 relative">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">Actividad vs Bajas</h2>
+            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors">
+              Mes <ChevronDown size={14} />
+            </div>
+          </div>
+          <DoubleBarChart data={chartData} />
           
-          {/* Chart Section */}
-          <section className="bg-white/90 backdrop-blur-2xl rounded-2xl p-6 md:p-8 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h2 className="text-lg font-bold text-slate-800">Rendimiento Académico</h2>
-                <p className="text-sm font-medium text-slate-500 mt-1">Evolución de participación vs asistencia en el semestre</p>
-              </div>
-              <button className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-700 transition-colors">
-                <MoreVertical size={20} />
-              </button>
-            </div>
-            <ModernSparkChart data={chartData} />
-          </section>
+          {/* Floating Action Button */}
+          <div 
+            onClick={() => setIsModalOpen(true)}
+            className="absolute -bottom-6 -right-4 w-14 h-14 bg-sky-500 rounded-full shadow-lg shadow-sky-500/40 flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform"
+          >
+            <MessageSquare size={24} fill="currentColor" />
+          </div>
+        </section>
 
-          {/* Quick Links Section */}
-          <section>
-            <h2 className="text-lg font-bold text-slate-800 mb-4">Accesos Directos</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {QUICK_LINKS.map(item => (
-                <QuickLink key={item.label} item={item} onClick={() => navigate(item.to)} />
-              ))}
-            </div>
-          </section>
-
-        </div>
-
-        {/* Right Column */}
-        <div className="flex flex-col gap-8 animate-slide-up animate-delay-300">
-          
-          {/* System Status Section */}
-          <section className="bg-white/90 backdrop-blur-2xl rounded-2xl p-6 md:p-8 border border-slate-200/60 shadow-sm flex flex-col hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-slate-800">Estado del Sistema</h2>
-            </div>
-            <div className="flex flex-col gap-6 flex-1">
-              {computeOccupation(stats).map(item => (
-                <OccupationBar 
-                  key={item.label} 
-                  item={item} 
-                  animated={animated} 
-                />
-              ))}
-            </div>
-            <div className="mt-8 pt-8 border-t border-slate-100">
-              <MinimalClock />
-            </div>
-          </section>
-
-          {/* Recent Users Section */}
-          <section className="bg-white/90 backdrop-blur-2xl rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-slate-800">Actividad Reciente</h2>
-              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md cursor-pointer hover:bg-indigo-100 transition-colors">
-                Ver todos
-              </span>
-            </div>
-            <div className="flex flex-col gap-2">
-              {ACTIVITY.length === 0 ? (
-                <div className="text-center py-6 text-sm font-medium text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  No hay actividad reciente
-                </div>
-              ) : ACTIVITY.map(item => (
-                <ActivityItem key={item.code} item={item} />
-              ))}
-            </div>
-          </section>
-
-          {/* Upcoming Events Section (Bento Grid Addition) */}
-          <section className="bg-white/90 backdrop-blur-2xl rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-slate-800">Próximos Eventos</h2>
-            </div>
-            <div className="flex flex-col gap-3">
-              {eventos.length === 0 ? (
-                <div className="text-center py-6 text-sm font-medium text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  No hay eventos programados
-                </div>
-              ) : eventos.slice(0, 5).map(ev => {
-                const fecha = ev.fecha ? new Date(ev.fecha) : null;
-                return (
-                  <div key={ev.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 cursor-default">
-                    <div className="w-12 h-12 flex flex-col items-center justify-center rounded-lg bg-red-50 text-red-600">
-                      <span className="text-[10px] font-bold uppercase">{fecha ? fecha.toLocaleString('es-ES', { month: 'short' }).replace('.','') : '—'}</span>
-                      <span className="text-lg font-extrabold leading-none">{fecha ? fecha.getDate() : '—'}</span>
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-slate-800">{ev.nombre || ev.titulo}</div>
-                      <div className="text-[11px] font-medium text-slate-500 flex items-center gap-1 mt-0.5">
-                        <Clock size={12} /> {ev.hora || ev.horaInicio?.slice(0,5) || '—'}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-        </div>
       </div>
+
+      {/* --- QUICK LINKS (Accesos Directos) --- */}
+      <section className="mb-8 animate-slide-up animate-delay-300">
+        <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-4 ml-1">Accesos Directos</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {QUICK_LINKS.map(item => (
+            <QuickLink key={item.label} item={item} onClick={() => navigate(item.to)} />
+          ))}
+        </div>
+      </section>
+
+      <NotificationModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        usuarios={usuariosList} 
+      />
     </div>
   );
 }

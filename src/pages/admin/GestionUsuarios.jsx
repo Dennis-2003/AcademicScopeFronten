@@ -23,8 +23,10 @@ import {
 import ExportButton from '../../components/ui/ExportButton';
 import Pagination, { usePagination } from '../../components/ui/Pagination';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import GestionMatriculas from './GestionMatriculas';
 
 export default function GestionUsuarios() {
+  const [mainTab, setMainTab] = useState('directorio');
   const [usuarios, setUsuarios] = useState([]);
   const [tutores, setTutores] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -170,27 +172,63 @@ export default function GestionUsuarios() {
         </div>
 
         <div className="flex items-center gap-3">
-          <ExportButton 
-            headers={[
-              { label: 'DNI', accessor: 'dni' },
-              { label: 'Nombre', accessor: 'nombre' },
-              { label: 'Apellido', accessor: 'apellido' },
-              { label: 'Rol', accessor: 'rol' },
-            ]}
-            data={usuarios}
-            filename="usuarios.csv"
-          />
-          <button 
-            onClick={openNewModal}
-            className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-[15px] bg-indigo-600 text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/20 hover:-translate-y-0.5 active:translate-y-0"
-          >
-            <UserPlus size={20} strokeWidth={2.5} />
-            NUEVO USUARIO
-          </button>
+          {mainTab === 'directorio' && (
+            <>
+              <ExportButton 
+                headers={[
+                  { label: 'DNI', accessor: 'dni' },
+                  { label: 'Nombre', accessor: 'nombre' },
+                  { label: 'Apellido', accessor: 'apellido' },
+                  { label: 'Rol', accessor: 'rol' },
+                ]}
+                data={usuarios}
+                filename="usuarios.csv"
+              />
+              <button 
+                onClick={openNewModal}
+                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-[15px] bg-indigo-600 text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/20 hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <UserPlus size={20} strokeWidth={2.5} />
+                NUEVO USUARIO
+              </button>
+            </>
+          )}
         </div>
       </header>
 
-      {/* --- TOOLBAR (Tabs & Search) --- */}
+      {/* --- MAIN TABS --- */}
+      <div className="flex border-b border-slate-200 mb-6">
+        <button
+          onClick={() => setMainTab('directorio')}
+          className={`px-6 py-3.5 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
+            mainTab === 'directorio'
+              ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50'
+              : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+          }`}
+        >
+          <Users size={16} />
+          Directorio de Personas
+        </button>
+        <button
+          onClick={() => setMainTab('matriculas')}
+          className={`px-6 py-3.5 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
+            mainTab === 'matriculas'
+              ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50'
+              : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+          }`}
+        >
+          <IdCard size={16} />
+          Gestión de Matrículas
+        </button>
+      </div>
+
+      {mainTab === 'matriculas' ? (
+        <div className="animate-fade-in">
+          <GestionMatriculas isEmbedded={true} />
+        </div>
+      ) : (
+        <>
+          {/* --- TOOLBAR (Tabs & Search) --- */}
       <div className="bg-white rounded-2xl p-2 border border-slate-200/70 shadow-sm mb-6 flex flex-col xl:flex-row items-center justify-between gap-4">
         
         {/* TABS */}
@@ -535,6 +573,8 @@ export default function GestionUsuarios() {
           </div>
         </div>
       )}
+      
+      </>)}
     </div>
   );
 }

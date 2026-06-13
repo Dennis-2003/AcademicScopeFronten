@@ -10,8 +10,9 @@ export function AuthProvider({ children }) {
   });
 
   const login = async (dni, password) => {
-    const res = await api.get('/usuarios/me', { auth: { username: dni, password } });
+    const res = await api.post('/auth/login', { username: dni, password });
     const loggedUser = res.data;
+    sessionStorage.setItem('token', loggedUser.token);
     sessionStorage.setItem('auth', JSON.stringify({ dni, password }));
     sessionStorage.setItem('user', JSON.stringify(loggedUser));
     setUser(loggedUser);
@@ -21,6 +22,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     sessionStorage.removeItem('auth');
     sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
     setUser(null);
     window.location.href = '/';
   };
@@ -34,8 +36,14 @@ export function AuthProvider({ children }) {
     sessionStorage.setItem('auth', JSON.stringify(auth));
   };
 
+  const updateUser = (updatedData) => {
+    const newData = { ...user, ...updatedData };
+    setUser(newData);
+    sessionStorage.setItem('user', JSON.stringify(newData));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, cambiarPassword }}>
+    <AuthContext.Provider value={{ user, login, logout, cambiarPassword, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

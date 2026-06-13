@@ -36,22 +36,19 @@ const NAV_CONFIG = {
     {
       category: 'Académico',
       items: [
-        { to: '/dashboard/admin/cursos', label: 'Cursos y Grados', icon: BookOpen },
-        { to: '/dashboard/admin/horarios', label: 'Horarios', icon: CalendarDays },
-        { to: '/dashboard/admin/evaluaciones', label: 'Evaluaciones', icon: GraduationCap },
+        { to: '/dashboard/admin/cursos', label: 'Gestión Académica', icon: BookOpen },
+        { to: '/dashboard/admin/evaluaciones', label: 'Desempeño y Asistencia', icon: GraduationCap },
       ]
     },
     {
       category: 'Comunidad',
       items: [
-        { to: '/dashboard/admin/usuarios', label: 'Directorio', icon: Users },
-        { to: '/dashboard/admin/asistencia', label: 'Asistencia General', icon: FileCheck2 },
+        { to: '/dashboard/admin/usuarios', label: 'Comunidad y Matrículas', icon: Users },
       ]
     },
     {
       category: 'Administración',
       items: [
-        { to: '/dashboard/admin/matriculas', label: 'Matrículas', icon: FileCheck2 },
         { to: '/dashboard/admin/pagos', label: 'Tesorería', icon: Wallet },
         { to: '/dashboard/admin/comunicados', label: 'Comunicados', icon: Bell },
       ]
@@ -119,28 +116,21 @@ function NavItem({ item, isActive, onClick }) {
       to={item.to} 
       end={item.end} 
       onClick={onClick}
-      className={`relative flex items-center gap-3 px-6 py-4 transition-colors duration-300 group overflow-hidden bg-white ${
+      className={`relative flex items-center gap-3 px-6 py-3.5 transition-all duration-200 group ${
         isActive
-          ? 'text-indigo-700 font-extrabold'
-          : 'text-slate-600 font-bold'
+          ? 'bg-indigo-50 text-indigo-700 font-extrabold shadow-sm'
+          : 'text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-800'
       }`}
     >
-      {/* Fondo animado al pasar el mouse o estar activo */}
-      <div className={`absolute inset-0 transition-transform duration-500 ease-out z-0 ${
-        isActive ? 'bg-indigo-50/60 translate-x-0' : 'bg-slate-50 translate-x-[-100%] group-hover:translate-x-0'
-      }`}></div>
+      {/* Active Left Border */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 transition-transform duration-200 ${isActive ? 'scale-y-100' : 'scale-y-0'}`}></div>
 
-      {/* Indicador lateral izquierdo animado */}
-      <div className={`absolute left-0 top-3 bottom-3 w-1.5 bg-indigo-600 rounded-r-md transition-all duration-300 ease-out origin-center z-10 ${
-        isActive ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'
-      }`}></div>
-      
       <Icon 
-        size={22} 
+        size={20} 
         strokeWidth={isActive ? 2.5 : 2} 
-        className={`relative z-10 transition-all duration-300 ${isActive ? 'text-indigo-600 scale-110' : 'text-slate-400 group-hover:text-indigo-500 group-hover:scale-110'}`} 
+        className={`shrink-0 transition-colors duration-200 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} 
       />
-      <span className={`text-[14px] uppercase tracking-wide relative z-10 transition-transform duration-300 ${isActive ? '' : 'group-hover:translate-x-1'}`}>{item.label}</span>
+      <span className="text-[13px] uppercase tracking-wide truncate mt-0.5">{item.label}</span>
     </NavLink>
   );
 }
@@ -177,15 +167,15 @@ export default function DashboardLayout() {
           DESKTOP & MOBILE SIDEBAR
           ============================== */}
       <aside className={`
-        fixed top-0 left-0 h-screen bg-white border-r border-slate-200 z-50 flex flex-col transition-transform duration-300 ease-in-out w-[270px] shadow-sm
+        fixed top-0 left-0 h-screen bg-white z-50 flex flex-col transition-transform duration-300 ease-in-out w-[240px] shadow-sm
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         
         {/* LOGO AREA */}
-        <div className="h-[76px] flex items-center justify-between px-6 bg-white border-b border-slate-100">
+        <div className="h-[76px] flex items-center justify-between px-5 bg-white border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <span className="text-2xl font-black text-slate-800 tracking-tighter uppercase flex items-center gap-2">
-              <span className="bg-indigo-600 text-white px-2 py-1 rounded-sm text-lg shadow-sm">AS</span>
+            <span className="text-xl font-black text-slate-800 tracking-tighter uppercase flex items-center gap-2">
+              <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-sm text-base shadow-sm">AS</span>
               AcademicScope
             </span>
           </div>
@@ -193,7 +183,7 @@ export default function DashboardLayout() {
             className="lg:hidden text-slate-400 hover:text-slate-700 transition-colors"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <X size={26} strokeWidth={2.5} />
+            <X size={24} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -225,14 +215,14 @@ export default function DashboardLayout() {
             </div>
             <div className="overflow-hidden flex-1">
               <h3 className="text-sm font-bold text-slate-800 truncate">{user.nombre} {user.apellido}</h3>
-              <p className="text-[12px] font-medium text-slate-500 truncate">Ver mi perfil</p>
+              <p className="text-[12px] font-medium text-slate-500 truncate">Ver perfil</p>
             </div>
           </Link>
           <button
             onClick={logout}
-            className="w-full flex items-center justify-center gap-2 p-4 bg-white border-t border-slate-200 text-[14px] font-bold text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 p-3.5 bg-white border-t border-slate-200 text-[13px] font-bold text-red-600 hover:bg-red-50 transition-colors"
           >
-            <LogOut size={18} strokeWidth={2.5} />
+            <LogOut size={16} strokeWidth={2.5} />
             CERRAR SESIÓN
           </button>
         </div>
@@ -241,17 +231,17 @@ export default function DashboardLayout() {
       {/* ==============================
           MAIN CONTENT AREA
           ============================== */}
-      <div className="flex-1 lg:pl-[280px] min-w-0 flex flex-col">
+      <div className="flex-1 lg:pl-[240px] min-w-0 flex flex-col">
         
         {/* MOBILE TOP BAR */}
-        <header className="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 h-[70px] px-4 flex items-center justify-between">
+        <header className="lg:hidden bg-transparent h-[70px] px-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
               AS
             </div>
           </div>
           <button 
-            className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-200 text-slate-600"
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
             onClick={() => setMobileMenuOpen(true)}
           >
             <Menu size={20} />
@@ -259,7 +249,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* DESKTOP TOP BAR (Command Palette Trigger) */}
-        <div className="hidden lg:flex items-center justify-between h-[80px] px-8 border-b border-slate-200/50 bg-white/50 backdrop-blur-md sticky top-0 z-30">
+        <div className="hidden lg:flex items-center justify-between h-[80px] px-8 bg-transparent">
           <div className="flex-1 max-w-2xl ml-8">
             {user?.rol === 'ADMIN' && (
               <button 
