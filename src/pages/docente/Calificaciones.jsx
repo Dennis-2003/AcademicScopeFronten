@@ -26,7 +26,7 @@ export default function Calificaciones() {
     if (cursoSeleccionado) cargarDatosGrilla(cursoSeleccionado);
   }, [cursoSeleccionado]);
 
-  const cargarCursos = async () => {
+  async function cargarCursos() {
     try {
       const data = await obtenerCursosPorDocente(user.id);
       setCursos(data);

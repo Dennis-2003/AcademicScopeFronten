@@ -31,7 +31,7 @@ export default function GestionMatriculas({ isEmbedded = false }) {
     fetchDatos();
   }, []);
 
-  const fetchDatos = async () => {
+  async function fetchDatos() {
     try {
       setCargando(true);
       const [estRes, gradosRes, matriculasRes] = await Promise.all([

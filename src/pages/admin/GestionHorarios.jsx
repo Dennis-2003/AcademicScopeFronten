@@ -118,7 +118,7 @@ export default function GestionHorarios({ isEmbedded = false }) {
     }
   };
 
-  const cargarDatosBase = async () => {
+  async function cargarDatosBase() {
     setCargandoBase(true);
     try {
       const [resCursos, resHorarios, resGrados] = await Promise.all([

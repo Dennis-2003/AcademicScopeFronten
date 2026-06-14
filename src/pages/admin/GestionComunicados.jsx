@@ -44,7 +44,7 @@ export default function GestionComunicados() {
     }
   }, [user]);
 
-  const fetchComunicados = async () => {
+  async function fetchComunicados() {
     try {
       setCargando(true);
       const res = await api.get('/comunicados');
@@ -56,7 +56,7 @@ export default function GestionComunicados() {
     }
   };
 
-  const fetchInbox = async () => {
+  async function fetchInbox() {
     try {
       const res = await api.get(`/notificaciones/usuario/${user.id}`);
       setInbox(res.data || []);

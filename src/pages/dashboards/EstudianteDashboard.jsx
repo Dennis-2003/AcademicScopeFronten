@@ -67,7 +67,7 @@ export default function EstudianteDashboard({ user }) {
     if (user?.id) cargarDatos();
   }, [user]);
 
-  const cargarDatos = async () => {
+  async function cargarDatos() {
     setCargando(true);
     try {
       // 1. Calificaciones (Semáforo)

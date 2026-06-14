@@ -26,7 +26,7 @@ export default function Recursos() {
     if (user?.id) cargarDatos();
   }, [user]);
 
-  const cargarDatos = async () => {
+  async function cargarDatos() {
     setCargando(true);
     try {
       const cursosData = await obtenerCursosPorDocente(user.id);

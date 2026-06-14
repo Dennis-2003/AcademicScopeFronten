@@ -16,7 +16,7 @@ export default function MiHorario() {
     }
   }, [user]);
 
-  const cargarHorarioReal = async () => {
+  async function cargarHorarioReal() {
     setCargando(true);
     try {
       // 1. Obtener todas las matrículas del estudiante
@@ -25,24 +25,31 @@ export default function MiHorario() {
       
       let todosLosHorarios = [];
 
+      let cursosDelEstudiante = [];
+      if (matriculas.length > 0) {
+        const gradoId = matriculas[0].grado.id;
+        const cursosRes = await api.get(`/cursos/grado/${gradoId}`);
+        cursosDelEstudiante = cursosRes.data;
+      }
+
       // 2. Por cada curso matriculado, traer sus horarios
-      for (const matricula of matriculas) {
-        if (matricula.curso && matricula.curso.id) {
+      for (const curso of cursosDelEstudiante) {
+        if (curso && curso.id) {
           try {
-            const resHorario = await api.get(`/horarios/curso/${matricula.curso.id}`);
+            const resHorario = await api.get(`/horarios/curso/${curso.id}`);
             const horariosDelCurso = resHorario.data || [];
             
             // Inyectar la información del curso al horario para poder mostrarla
             const horariosConInfo = horariosDelCurso.map(h => ({
               ...h,
-              nombreCurso: matricula.curso.nombre,
-              codigoCurso: matricula.curso.codigo,
-              tipoCurso: matricula.curso.tipo
+              nombreCurso: curso.nombre,
+              codigoCurso: curso.codigo,
+              tipoCurso: curso.tipo
             }));
             
             todosLosHorarios = [...todosLosHorarios, ...horariosConInfo];
           } catch (e) {
-            console.error(`Error cargando horario para curso ${matricula.curso.id}:`, e);
+            console.error(`Error cargando horario para curso ${curso.id}:`, e);
           }
         }
       }
@@ -56,76 +63,73 @@ export default function MiHorario() {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto animate-fade-in pb-12 font-sans">
-      <header className="mb-8 md:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto', paddingBottom: '3rem', fontFamily: 'var(--font-main)' }}>
+      <header style={{ marginBottom: '2.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1.5rem', background: 'white', padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-3">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 0.75rem', borderRadius: '9999px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>
             <CalendarIcon size={14} strokeWidth={2.5} />
             Estudiante / Horario
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
+          <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.5rem', lineHeight: '1.2' }}>
             Mi Horario Semanal
           </h1>
-          <p className="text-slate-500 font-medium mt-2 text-sm md:text-base">
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '500', maxWidth: '600px', lineHeight: '1.5' }}>
             Visualiza tus clases programadas según tus matrículas actuales.
           </p>
         </div>
       </header>
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
+      <div style={{ backgroundColor: 'white', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: '600px' }}>
         {cargando ? (
-          <div className="flex-1 flex flex-col justify-center items-center py-20">
-            <Loader2 className="animate-spin text-indigo-600 mb-4" size={40} />
-            <p className="text-slate-500 font-medium">Sincronizando con el servidor...</p>
+          <div style={{ flex: '1 1 0%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '5rem' }}>
+            <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4" />
+            <p style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Sincronizando con el servidor...</p>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col lg:flex-row overflow-x-auto">
-            {DIAS.map(dia => {
+          <div style={{ flex: '1 1 0%', display: 'flex', overflowX: 'auto', width: '100%' }}>
+            {DIAS.map((dia, index) => {
               // Ordenar las clases del día por hora de inicio
               const clasesDelDia = horarios
                 .filter(h => h.diaSemana === dia)
                 .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
                 
               return (
-                <div key={dia} className="flex-1 min-w-[240px] border-b lg:border-b-0 lg:border-r border-slate-100 last:border-r-0">
-                  <div className="p-4 border-b border-slate-100 bg-slate-50/50 text-center sticky top-0 z-10 backdrop-blur-sm">
-                    <h3 className="font-extrabold text-slate-700 text-[15px]">{dia}</h3>
+                <div key={dia} style={{ flex: '1 1 20%', minWidth: '260px', borderRight: index !== DIAS.length - 1 ? '1px solid var(--border-color)' : 'none', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ padding: '1.25rem 1rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', textAlign: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+                    <h3 style={{ fontWeight: '800', color: 'var(--text-primary)', fontSize: '0.9375rem', margin: 0 }}>{dia}</h3>
                   </div>
-                  <div className="p-4 space-y-4">
+                  <div style={{ padding: '1rem', flex: '1 1 0%', backgroundColor: 'white' }}>
                     {clasesDelDia.length === 0 ? (
-                      <div className="text-center py-12 flex flex-col items-center justify-center opacity-50">
-                        <CalendarIcon size={32} className="text-slate-300 mb-2" strokeWidth={1.5} />
-                        <span className="text-sm font-medium text-slate-400">Día libre</span>
+                      <div style={{ textAlign: 'center', padding: '3rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+                        <CalendarIcon size={32} color="var(--text-muted)" strokeWidth={1.5} style={{ marginBottom: '0.5rem' }} />
+                        <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-muted)' }}>Día libre</span>
                       </div>
                     ) : (
-                      clasesDelDia.map(clase => (
-                        <div key={clase.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
-                          {clase.tipoCurso === 'TALLER' && (
-                            <div className="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
-                          )}
-                          {clase.tipoCurso !== 'TALLER' && (
-                            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-                          )}
-                          
-                          <div className="flex items-center gap-2 text-indigo-600 font-black text-sm mb-2">
-                            <Clock size={16} />
-                            <span>{clase.horaInicio} - {clase.horaFin}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {clasesDelDia.map(clase => (
+                          <div key={clase.id} style={{ backgroundColor: 'white', border: '1px solid var(--border-color)', borderRadius: '1rem', padding: '1rem', boxShadow: 'var(--shadow-sm)', position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: clase.tipoCurso === 'TALLER' ? '#F59E0B' : 'var(--primary)' }}></div>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', fontWeight: '900', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                              <Clock size={16} />
+                              <span>{clase.horaInicio} - {clase.horaFin}</span>
+                            </div>
+                            
+                            <h4 style={{ fontWeight: '800', color: 'var(--text-primary)', fontSize: '1rem', lineHeight: '1.2', marginBottom: '0.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {clase.nombreCurso}
+                            </h4>
+                            
+                            <p style={{ fontSize: '0.6875rem', fontWeight: '700', color: 'var(--text-muted)', fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1rem' }}>
+                              {clase.codigoCurso}
+                            </p>
+                            
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-body)', padding: '0.5rem 0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+                              <MapPin size={14} color="var(--text-muted)" />
+                              <span>Aula: {clase.aula}</span>
+                            </div>
                           </div>
-                          
-                          <h4 className="font-extrabold text-slate-800 text-[16px] leading-tight mb-1 line-clamp-2">
-                            {clase.nombreCurso}
-                          </h4>
-                          
-                          <p className="text-[11px] font-bold text-slate-400 font-mono tracking-widest uppercase mb-4">
-                            {clase.codigoCurso}
-                          </p>
-                          
-                          <div className="flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-50 px-3 py-2 rounded-xl w-fit border border-slate-100">
-                            <MapPin size={14} className="text-slate-400" />
-                            <span>Aula: {clase.aula}</span>
-                          </div>
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>

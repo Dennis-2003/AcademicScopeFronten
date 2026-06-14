@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Clock, CheckCircle2, FileText, Send, AlertCircle, Calendar } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -18,7 +19,7 @@ export default function MisTareas() {
     if (user?.id) cargarDatos();
   }, [user]);
 
-  const cargarDatos = async () => {
+  async function cargarDatos() {
     setCargando(true);
     try {
       // 1. Obtener todas las asignaciones del estudiante
@@ -164,9 +165,9 @@ export default function MisTareas() {
       </section>
 
       {/* MODAL DETALLE DE TAREA */}
-      {tareaSeleccionada && (
+      {tareaSeleccionada && createPortal(
         <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-3xl w-[90vw] md:w-[480px] shrink-0 shadow-2xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-start shrink-0">
               <div>
                 <span className="text-xs font-black text-indigo-600 uppercase tracking-widest">{tareaSeleccionada.curso.nombre}</span>
@@ -230,7 +231,8 @@ export default function MisTareas() {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

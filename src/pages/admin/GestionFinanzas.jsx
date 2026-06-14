@@ -31,7 +31,7 @@ export default function GestionFinanzas() {
     fetchDatos();
   }, []);
 
-  const fetchDatos = async () => {
+  async function fetchDatos() {
     try {
       setCargando(true);
       const [conceptosRes, estudiantesRes, pagosRes] = await Promise.all([

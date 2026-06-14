@@ -27,7 +27,7 @@ export default function Asignaciones() {
     }
   }, [user]);
 
-  const cargarDatos = async () => {
+  async function cargarDatos() {
     setCargando(true);
     try {
       const cursosData = await obtenerCursosPorDocente(user.id);
@@ -227,7 +227,7 @@ function RevisionEntregasModal({ tarea, onClose }) {
     cargarDatos();
   }, [tarea]);
 
-  const cargarDatos = async () => {
+  async function cargarDatos() {
     setCargando(true);
     try {
       const [matRes, entRes] = await Promise.all([
@@ -272,10 +272,53 @@ function RevisionEntregasModal({ tarea, onClose }) {
     `${e.nombre} ${e.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  const renderVistaPrevia = (contenido) => {
+    if (!contenido) return <p className="text-sm text-slate-400 italic">No hay contenido adjunto.</p>;
+    
+    const url = String(contenido).trim();
+    const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
+    const isPdf = url.match(/\.(pdf)$/i);
+    const isUrl = url.startsWith('http://') || url.startsWith('https://');
+
+    if (isImage && isUrl) {
+      return (
+        <div className="mt-2 border border-slate-200 rounded-lg overflow-hidden max-w-full sm:max-w-md bg-slate-50">
+          <img src={url} alt="Entrega" className="w-full h-auto object-contain max-h-64" />
+          <a href={url} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 p-2 text-xs font-bold bg-white hover:bg-slate-50 text-indigo-600 border-t border-slate-200 transition-colors">
+            <ExternalLink size={14} /> Abrir imagen completa
+          </a>
+        </div>
+      );
+    }
+    
+    if (isPdf && isUrl) {
+      return (
+        <div className="mt-2 border border-slate-200 rounded-lg overflow-hidden h-[400px] flex flex-col bg-slate-50">
+          <iframe src={url} className="w-full flex-1" title="Visor de PDF" />
+          <a href={url} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 p-2 text-xs font-bold bg-white hover:bg-slate-50 text-indigo-600 border-t border-slate-200 transition-colors">
+            <ExternalLink size={14} /> Abrir PDF en nueva pestaña
+          </a>
+        </div>
+      );
+    }
+
+    if (isUrl) {
+      return (
+        <a href={url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg font-medium text-sm transition-colors">
+          <ExternalLink size={16} /> Abrir enlace entregado
+        </a>
+      );
+    }
+
+    // Texto plano
+    return <p className="text-sm text-slate-800 whitespace-pre-wrap mt-2 bg-slate-50 p-4 rounded-lg border border-slate-100">{url}</p>;
+  };
+
   return (
     <div className="fixed inset-0 z-[200] flex justify-end">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col animate-slide-in-right">
+      {/* Fondo totalmente transparente, sin desenfoque ni oscurecimiento */}
+      <div className="absolute inset-0 bg-transparent" onClick={onClose}></div>
+      <div className="relative w-full max-w-2xl bg-white h-full shadow-[0_0_40px_rgba(0,0,0,0.1)] flex flex-col animate-slide-in-right">
         
         <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
           <div>
@@ -354,12 +397,12 @@ function RevisionEntregasModal({ tarea, onClose }) {
                       {isRevisando && entrega && (
                         <div className="p-4 bg-slate-50 border-t border-slate-200 animate-fade-in space-y-4">
                           <div className="bg-white border border-slate-200 p-4 rounded-xl">
-                            <h4 className="text-xs font-bold uppercase text-slate-500 mb-2">Respuesta del Estudiante</h4>
-                            <p className="text-sm text-slate-800 whitespace-pre-wrap">{entrega.archivoUrl}</p>
+                            <h4 className="text-xs font-bold uppercase text-slate-500 mb-2">Trabajo del Estudiante</h4>
+                            {renderVistaPrevia(entrega.archivoUrl)}
                           </div>
                           
-                          <div className="flex gap-4 items-start">
-                            <div className="flex-1">
+                          <div className="flex flex-col sm:flex-row gap-4 items-start">
+                            <div className="w-full sm:w-auto">
                               <label className="text-xs font-bold uppercase text-slate-500 mb-2 block">Calificación</label>
                               <div className="flex bg-white rounded-lg p-1 border border-slate-200 w-fit">
                                 <button 
@@ -377,12 +420,12 @@ function RevisionEntregasModal({ tarea, onClose }) {
                               </div>
                             </div>
 
-                            <div className="flex-[2]">
+                            <div className="flex-1 w-full">
                               <label className="text-xs font-bold uppercase text-slate-500 mb-2 block">Comentario (Opcional)</label>
                               <textarea 
                                 value={feedback}
                                 onChange={e => setFeedback(e.target.value)}
-                                className="w-full border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-indigo-500 min-h-[80px]"
+                                className="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-indigo-500 min-h-[80px] bg-white shadow-sm"
                                 placeholder="Escribe un feedback al alumno..."
                               />
                             </div>
@@ -390,7 +433,7 @@ function RevisionEntregasModal({ tarea, onClose }) {
 
                           <div className="flex justify-end gap-2 pt-2">
                             <button onClick={() => setRevisandoEstudiante(null)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-200 rounded-lg">Cancelar</button>
-                            <button onClick={handleGuardarRevision} disabled={guardando} className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex items-center gap-2">
+                            <button onClick={handleGuardarRevision} disabled={guardando} className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex items-center gap-2 shadow-sm">
                               {guardando ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                               Guardar Revisión
                             </button>

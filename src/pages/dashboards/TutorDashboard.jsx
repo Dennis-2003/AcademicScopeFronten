@@ -1,159 +1,356 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { 
   HeartHandshake, 
   Bell, 
   ChevronRight,
   User,
-  AlertTriangle
+  AlertTriangle,
+  GraduationCap,
+  CalendarDays,
+  Wallet
 } from 'lucide-react';
 
-function StatCard({ label, value, Icon, color, bg }) {
+function StatCard({ label, value, Icon, color }) {
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm" style={{ backgroundColor: bg, color }}>
-            <Icon size={24} strokeWidth={2} className="transition-transform group-hover:scale-110" />
-          </div>
-        </div>
+    <div style={{
+      backgroundColor: '#ffffff',
+      borderRadius: '16px',
+      padding: '24px',
+      border: '1px solid #e2e8f0',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '20px',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      cursor: 'default'
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = 'translateY(-4px)';
+      e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = 'none';
+      e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
+    }}>
+      <div style={{
+        width: '56px',
+        height: '56px',
+        borderRadius: '12px',
+        backgroundColor: `${color}15`,
+        color: color,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Icon size={28} strokeWidth={2.5} />
       </div>
       <div>
-        <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{value}</h3>
-        <p className="text-sm font-medium text-slate-500 mt-1">{label}</p>
+        <h3 style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b', lineHeight: '1.2', margin: 0 }}>{value}</h3>
+        <p style={{ fontSize: '14px', fontWeight: '600', color: '#64748b', margin: '4px 0 0 0' }}>{label}</p>
       </div>
     </div>
   );
 }
 
-function QuickAction({ label, desc, Icon, color, bg, onClick }) {
+function QuickAction({ label, desc, Icon, color, onClick }) {
   return (
     <button 
-      onClick={onClick} 
-      className="w-full bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-2xl p-5 text-left transition-all hover:-translate-y-1 hover:shadow-lg hover:border-slate-300 group relative overflow-hidden"
+      onClick={onClick}
+      style={{
+        width: '100%',
+        backgroundColor: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '20px',
+        textAlign: 'left',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = color;
+        e.currentTarget.style.backgroundColor = `${color}05`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = '#e2e8f0';
+        e.currentTarget.style.backgroundColor = '#ffffff';
+      }}
     >
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
-      <div className="flex justify-between items-center mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: bg, color }}>
-          <Icon size={20} strokeWidth={2} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <div style={{ color: color, backgroundColor: `${color}15`, padding: '10px', borderRadius: '10px' }}>
+          <Icon size={20} strokeWidth={2.5} />
         </div>
-        <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-600 transition-colors" />
+        <ChevronRight size={20} color="#cbd5e1" />
       </div>
-      <h4 className="text-[15px] font-bold text-slate-800">{label}</h4>
-      <p className="text-xs font-medium text-slate-500 mt-1">{desc}</p>
+      <div>
+        <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#334155', margin: 0 }}>{label}</h4>
+        <p style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', margin: '4px 0 0 0' }}>{desc}</p>
+      </div>
     </button>
   );
 }
 
 export default function TutorDashboard({ user }) {
   const navigate = useNavigate();
-  const [stats] = useState({ hijos: 2, notificaciones: 5 });
+  const [stats, setStats] = useState({ hijos: 0, notificaciones: 0 });
+  const [hijos, setHijos] = useState([]);
+  const [alertas, setAlertas] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
   const hoy = new Date();
   const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const fechaStr = hoy.toLocaleDateString('es-ES', opcionesFecha);
 
-  const HIJOS_MOCK = [
-    { nombre: 'Carlos Condori', grado: '3ro Secundaria', semaforo: 'VERDE', asistencia: 98 },
-    { nombre: 'Ana Condori', grado: '1ro Secundaria', semaforo: 'AMBAR', asistencia: 85 },
-  ];
+  useEffect(() => {
+    if (user?.id) cargarDatos();
+  }, [user]);
 
-  const getSemaforoColorText = (color) => {
+  async function cargarDatos() {
+    setCargando(true);
+    try {
+      const res = await api.get(`/dashboard/tutor/${user.id}`);
+      const data = res.data;
+      
+      setStats({ hijos: data.hijos, notificaciones: data.notificaciones });
+      setHijos(data.resumenHijos || []);
+      setAlertas(data.alertas || []);
+    } catch (error) {
+      console.error("Error cargando dashboard de tutor", error);
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  const getSemaforoStyles = (color) => {
     switch (color) {
-      case 'VERDE': return 'text-emerald-500';
-      case 'AMBAR': return 'text-amber-500';
-      case 'ROJO': return 'text-red-500';
-      default: return 'text-slate-500';
+      case 'VERDE': return { color: '#10b981', bg: '#d1fae5' };
+      case 'AMBAR': return { color: '#f59e0b', bg: '#fef3c7' };
+      case 'ROJO': return { color: '#ef4444', bg: '#fee2e2' };
+      default: return { color: '#64748b', bg: '#f1f5f9' };
     }
   };
 
+  if (cargando) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '100px 0' }}>
+        <div style={{ width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <p style={{ marginTop: '16px', color: '#64748b', fontWeight: '600' }}>Cargando resumen del apoderado...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full animate-fade-in pb-12">
-      {/* Banner de Bienvenida Tutor */}
-      <div className="relative w-full rounded-[2rem] overflow-hidden mb-8 shadow-xl bg-gradient-to-r from-purple-600 to-indigo-600 border border-indigo-500">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-[100px] opacity-10"></div>
+    <div style={{ width: '100%', paddingBottom: '48px', animation: 'fadeIn 0.5s ease-out' }}>
+      {/* HEADER SECTION - Clean and modern without gradients */}
+      <div style={{
+        backgroundColor: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '24px',
+        padding: '40px',
+        marginBottom: '32px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
+      }}>
+        <div style={{ 
+          display: 'inline-flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          backgroundColor: '#f1f5f9', 
+          color: '#475569', 
+          padding: '6px 16px', 
+          borderRadius: '99px', 
+          fontSize: '12px', 
+          fontWeight: '700', 
+          letterSpacing: '0.05em',
+          textTransform: 'uppercase',
+          width: 'fit-content'
+        }}>
+          <span style={{ width: '8px', height: '8px', backgroundColor: '#3b82f6', borderRadius: '50%' }}></span>
+          Panel de Apoderado
+        </div>
+        <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+          Bienvenido(a), {user.nombre}
+        </h1>
+        <p style={{ fontSize: '16px', color: '#64748b', margin: 0, fontWeight: '500' }}>
+          {fechaStr} — Revisa el rendimiento y progreso de tus hijos de forma rápida y sencilla.
+        </p>
+      </div>
+
+      {/* STATS ROW */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '24px',
+        marginBottom: '32px'
+      }}>
+        <StatCard label="Hijos Matriculados" value={stats.hijos} Icon={GraduationCap} color="#3b82f6" />
+        <StatCard label="Notificaciones Nuevas" value={stats.notificaciones} Icon={Bell} color="#ef4444" />
+      </div>
+
+      {/* MAIN LAYOUT */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 380px',
+        gap: '32px',
+        alignItems: 'start'
+      }}>
         
-        <div className="relative p-8 md:p-10 flex flex-col md:flex-row items-center justify-between z-10">
-          <div className="text-white">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/20 backdrop-blur-md text-white text-xs font-bold uppercase tracking-wider mb-4 border border-white/20">
-              <span className="w-2 h-2 rounded-full bg-purple-300 animate-pulse"></span>
-              Panel de Apoderado
-            </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
-              Bienvenido(a), {user.nombre} <span className="inline-block hover:rotate-12 transition-transform cursor-default text-white origin-[70%_70%]">👋</span>
-            </h1>
-            <p className="text-purple-100 font-medium">
-              {fechaStr} — Mantente al tanto del progreso de tus hijos.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Grid de Estadísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        <StatCard label="Hijos Matriculados" value={stats.hijos} Icon={User} color="#8b5cf6" bg="#8b5cf615" />
-        <StatCard label="Notificaciones Nuevas" value={stats.notificaciones} Icon={Bell} color="#f43f5e" bg="#f43f5e15" />
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_350px] gap-8">
-        {/* Columna Izquierda */}
-        <div className="flex flex-col gap-8">
+        {/* LEFT COLUMN: Mis Hijos & Accesos Directos */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          
           <section>
-            <h2 className="text-lg font-bold text-slate-800 mb-4">Resumen de tus Hijos</h2>
-            <div className="flex flex-col gap-4">
-              {HIJOS_MOCK.map((hijo, idx) => (
-                <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/dashboard/tutor/hijos')}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">
-                      {hijo.nombre.charAt(0)}
+            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b', marginBottom: '20px' }}>Resumen de tus Hijos</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {hijos.length === 0 ? (
+                 <div style={{ backgroundColor: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '16px', padding: '40px', textAlign: 'center' }}>
+                    <User size={32} color="#94a3b8" style={{ margin: '0 auto 12px auto' }} />
+                    <p style={{ fontSize: '14px', fontWeight: '700', color: '#64748b', margin: 0 }}>Aún no tienes hijos asignados a tu cuenta.</p>
+                 </div>
+              ) : (
+                hijos.map((hijo) => {
+                  const semStyles = getSemaforoStyles(hijo.semaforo);
+                  return (
+                    <div 
+                      key={hijo.id} 
+                      onClick={() => navigate('/dashboard/tutor/hijos')}
+                      style={{ 
+                        backgroundColor: '#ffffff', 
+                        borderRadius: '16px', 
+                        padding: '24px', 
+                        border: '1px solid #e2e8f0', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#cbd5e1';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e2e8f0';
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '800' }}>
+                          {hijo.nombre.charAt(0)}
+                        </div>
+                        <div>
+                          <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: '0 0 4px 0' }}>{hijo.nombre}</h4>
+                          <p style={{ fontSize: '14px', fontWeight: '600', color: '#64748b', margin: 0 }}>{hijo.grado}</p>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Asistencia</div>
+                          <div style={{ fontSize: '20px', fontWeight: '900', color: '#334155' }}>{hijo.asistencia}%</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Semáforo</div>
+                          <div style={{ 
+                            fontSize: '13px', 
+                            fontWeight: '800', 
+                            color: semStyles.color, 
+                            backgroundColor: semStyles.bg,
+                            padding: '4px 12px',
+                            borderRadius: '99px'
+                          }}>
+                            {hijo.semaforo}
+                          </div>
+                        </div>
+                        <ChevronRight size={24} color="#cbd5e1" />
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-slate-800">{hijo.nombre}</h4>
-                      <p className="text-sm font-medium text-slate-500">{hijo.grado}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="text-center">
-                      <div className="text-xs font-bold text-slate-400 uppercase">Asistencia</div>
-                      <div className="text-lg font-black text-slate-700">{hijo.asistencia}%</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xs font-bold text-slate-400 uppercase">Semáforo</div>
-                      <div className={`text-lg font-black uppercase ${getSemaforoColorText(hijo.semaforo)}`}>{hijo.semaforo}</div>
-                    </div>
-                    <ChevronRight size={20} className="text-slate-300" />
-                  </div>
-                </div>
-              ))}
+                  );
+                })
+              )}
             </div>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-slate-800 mb-4">Accesos Directos</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <QuickAction label="Ver Semáforo Detallado" desc="Calificaciones por curso" Icon={HeartHandshake} color="#8b5cf6" bg="#8b5cf615" onClick={() => navigate('/dashboard/tutor/hijos')} />
-              <QuickAction label="Bandeja de Entrada" desc="Mensajes y comunicados" Icon={Bell} color="#f59e0b" bg="#f59e0b15" onClick={() => navigate('/dashboard/tutor/notificaciones')} />
+            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b', marginBottom: '20px' }}>Accesos Directos</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+              <QuickAction label="Semáforo Detallado" desc="Ver notas de cursos" Icon={HeartHandshake} color="#3b82f6" onClick={() => navigate('/dashboard/tutor/hijos')} />
+              <QuickAction label="Mensajes" desc="Avisos y notificaciones" Icon={Bell} color="#8b5cf6" onClick={() => navigate('/dashboard/tutor/notificaciones')} />
+              <QuickAction label="Horarios" desc="Clases de la semana" Icon={CalendarDays} color="#10b981" onClick={() => navigate('/dashboard/tutor/horario')} />
+              <QuickAction label="Pagos" desc="Gestión de pensiones" Icon={Wallet} color="#f59e0b" onClick={() => navigate('/dashboard/tutor/pagos')} />
             </div>
           </section>
+
         </div>
 
-        {/* Columna Derecha */}
+        {/* RIGHT COLUMN: Alertas Recientes */}
         <div>
-          <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm h-full">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-slate-800">Alertas Recientes</h2>
-            </div>
-            <div className="flex flex-col gap-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                <AlertTriangle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-bold text-amber-800">Baja en Matemáticas</h4>
-                  <p className="text-xs text-amber-700 mt-1">Ana Condori ha bajado su rendimiento a ÁMBAR en el curso de Matemáticas.</p>
+          <section style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '24px',
+            padding: '32px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            minHeight: '100%'
+          }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <AlertTriangle size={24} color="#f43f5e" />
+              Alertas Recientes
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {alertas.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+                    <HeartHandshake size={24} color="#94a3b8" />
+                  </div>
+                  <p style={{ fontSize: '14px', fontWeight: '600', color: '#64748b', margin: 0 }}>Todo en orden.<br/>No hay alertas nuevas de tus hijos.</p>
                 </div>
-              </div>
+              ) : (
+                alertas.map(alerta => {
+                  const isRojo = alerta.tipo === 'ROJO';
+                  const mainColor = isRojo ? '#ef4444' : '#f59e0b';
+                  const bgColor = isRojo ? '#fef2f2' : '#fffbeb';
+                  const borderColor = isRojo ? '#fecaca' : '#fde68a';
+
+                  return (
+                    <div key={alerta.id} style={{
+                      backgroundColor: bgColor,
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '16px',
+                      padding: '20px',
+                      display: 'flex',
+                      gap: '16px',
+                      alignItems: 'flex-start'
+                    }}>
+                      <div style={{ 
+                        backgroundColor: '#ffffff', 
+                        padding: '8px', 
+                        borderRadius: '12px', 
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        marginTop: '2px'
+                      }}>
+                        <AlertTriangle size={20} color={mainColor} />
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#1e293b', margin: '0 0 6px 0', lineHeight: '1.3' }}>{alerta.titulo}</h4>
+                        <p style={{ fontSize: '13px', fontWeight: '500', color: '#475569', margin: 0, lineHeight: '1.5' }}>{alerta.mensaje}</p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </section>
         </div>
+
       </div>
     </div>
   );

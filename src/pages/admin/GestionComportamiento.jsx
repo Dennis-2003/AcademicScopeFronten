@@ -20,7 +20,7 @@ export default function GestionComportamiento() {
     fetchReportes();
   }, []);
 
-  const fetchReportes = async () => {
+  async function fetchReportes() {
     try {
       setCargando(true);
       const res = await api.get('/comportamientos');

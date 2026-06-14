@@ -37,8 +37,13 @@ import MiSemaforo from './pages/estudiante/MiSemaforo';
 import MiAsistencia from './pages/estudiante/MiAsistencia';
 import MiHorario from './pages/estudiante/MiHorario';
 import MisTareas from './pages/estudiante/MisTareas';
+import MisComunicados from './pages/estudiante/MisComunicados';
+import MisRecursos from './pages/estudiante/MisRecursos';
+import MiConducta from './pages/estudiante/MiConducta';
 import SemaforoHijos from './pages/tutor/SemaforoHijos';
 import Notificaciones from './pages/tutor/Notificaciones';
+import FinanzasHijos from './pages/tutor/FinanzasHijos';
+import HorarioHijos from './pages/tutor/HorarioHijos';
 
 import './App.css';
 
@@ -90,11 +95,16 @@ export default function App() {
                 <Route path="estudiante/asistencia" element={<MiAsistencia />} />
                 <Route path="estudiante/horario" element={<MiHorario />} />
                 <Route path="estudiante/tareas" element={<MisTareas />} />
+                <Route path="estudiante/comunicados" element={<MisComunicados />} />
+                <Route path="estudiante/recursos" element={<MisRecursos />} />
+                <Route path="estudiante/conducta" element={<MiConducta />} />
               </Route>
 
               {/* Rutas solo TUTOR */}
               <Route element={<ProtectedRoute allowedRoles={['TUTOR']} />}>
                 <Route path="tutor/hijos" element={<SemaforoHijos />} />
+                <Route path="tutor/horario" element={<HorarioHijos />} />
+                <Route path="tutor/pagos" element={<FinanzasHijos />} />
                 <Route path="tutor/notificaciones" element={<Notificaciones />} />
               </Route>
             </Route>

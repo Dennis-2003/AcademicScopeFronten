@@ -89,7 +89,7 @@ function ConfiguracionEvaluacionesModal({ curso, onClose }) {
     cargarEvaluaciones();
   }, [curso]);
 
-  const cargarEvaluaciones = async () => {
+  async function cargarEvaluaciones() {
     try {
       const res = await api.get(`/evaluaciones/curso/${curso.id}`);
       setEvaluaciones(res.data.sort((a, b) => a.orden - b.orden));
@@ -257,7 +257,7 @@ export default function GestionCursos() {
 
   // CARGAR DATOS
   useEffect(() => {
-    const fetchDatos = async () => {
+    async function fetchDatos() {
       try {
         const [resGrados, resDocentes, resCursos] = await Promise.all([
           api.get('/grados'),

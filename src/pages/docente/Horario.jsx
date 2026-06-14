@@ -16,7 +16,7 @@ export default function Horario() {
     if (user?.id) cargarDatos();
   }, [user]);
 
-  const cargarDatos = async () => {
+  async function cargarDatos() {
     setCargando(true);
     try {
       const cursosData = await obtenerCursosPorDocente(user.id);

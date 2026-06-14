@@ -12,15 +12,22 @@ export default function MiAsistencia() {
     cargarDatos();
   }, [user.id]);
 
-  const cargarDatos = async () => {
+  async function cargarDatos() {
     setLoading(true);
     try {
       // 1. Obtener los cursos donde el estudiante está matriculado
       const matRes = await api.get(`/matriculas/estudiante/${user.id}`);
       const matriculasValidas = matRes.data.filter(m => m.estado !== 'RETIRADA');
+      
+      let cursosDelEstudiante = [];
+      if (matriculasValidas.length > 0) {
+        const gradoId = matriculasValidas[0].grado.id;
+        const cursosRes = await api.get(`/cursos/grado/${gradoId}`);
+        cursosDelEstudiante = cursosRes.data;
+      }
 
-      const dataCompleta = await Promise.all(matriculasValidas.map(async (matricula) => {
-        const cursoId = matricula.curso.id;
+      const dataCompleta = await Promise.all(cursosDelEstudiante.map(async (curso) => {
+        const cursoId = curso.id;
         
         // 2. Por cada curso, obtener sus asistencias
         const asisRes = await api.get(`/asistencias/estudiante/${user.id}/curso/${cursoId}`);
@@ -47,7 +54,7 @@ export default function MiAsistencia() {
         const porcentaje = resumen.total > 0 ? Math.round((asistidos / resumen.total) * 100) : 100;
 
         return {
-          curso: matricula.curso,
+          curso: curso,
           asistencias: asistencias.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)),
           resumen,
           porcentaje
@@ -103,7 +110,7 @@ export default function MiAsistencia() {
           <span className="text-indigo-600 font-bold text-sm uppercase tracking-widest">Cargando...</span>
         </div>
       ) : cursosData.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-16 flex flex-col items-center text-center shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-3xl p-16 flex flex-col items-center text-center shadow-sm w-full max-w-2xl mx-auto">
           <div className="w-24 h-24 rounded-full bg-slate-50 flex items-center justify-center mb-6">
             <BookOpen size={40} className="text-slate-300" />
           </div>

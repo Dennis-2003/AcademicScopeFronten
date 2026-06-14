@@ -19,7 +19,8 @@ import {
   ClipboardList,
   FolderOpen,
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from 'lucide-react';
 import CommandPalette from '../ui/CommandPalette';
 import NotificationsDropdown from '../ui/NotificationsDropdown';
@@ -88,29 +89,54 @@ const NAV_CONFIG = {
   ],
   TUTOR: [
     {
-      category: 'Menú',
+      category: 'Menú Principal',
       items: [
         { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-        { to: '/dashboard/tutor/hijos', label: 'Mis Hijos', icon: HeartHandshake },
-        { to: '/dashboard/tutor/notificaciones', label: 'Notificaciones', icon: Bell },
+        { to: '/dashboard/tutor/hijos', label: 'Mis Hijos (Semáforo)', icon: HeartHandshake },
+        { to: '/dashboard/tutor/horario', label: 'Horarios de Clases', icon: CalendarDays },
+      ]
+    },
+    {
+      category: 'Administrativo',
+      items: [
+        { to: '/dashboard/tutor/pagos', label: 'Pagos y Finanzas', icon: Wallet },
+        { to: '/dashboard/tutor/notificaciones', label: 'Avisos y Notificaciones', icon: Bell },
       ]
     }
   ],
   ESTUDIANTE: [
     {
-      category: 'Menú',
+      category: 'Principal',
       items: [
-        { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-        { to: '/dashboard/estudiante/tareas', label: 'Mis Tareas', icon: ClipboardList },
+        { to: '/dashboard', label: 'Panel Principal', icon: LayoutDashboard, end: true },
         { to: '/dashboard/estudiante/horario', label: 'Mi Horario', icon: CalendarDays },
+      ]
+    },
+    {
+      category: 'Académico',
+      items: [
+        { to: '/dashboard/estudiante/tareas', label: 'Mis Tareas', icon: ClipboardList },
+        { to: '/dashboard/estudiante/recursos', label: 'Material de Clase', icon: FolderOpen },
         { to: '/dashboard/estudiante/notas', label: 'Mis Notas', icon: GraduationCap },
+      ]
+    },
+    {
+      category: 'Seguimiento',
+      items: [
         { to: '/dashboard/estudiante/asistencia', label: 'Mi Asistencia', icon: FileCheck2 },
+        { to: '/dashboard/estudiante/conducta', label: 'Mi Conducta', icon: AlertCircle },
+      ]
+    },
+    {
+      category: 'Comunicación',
+      items: [
+        { to: '/dashboard/estudiante/comunicados', label: 'Comunicados', icon: MessageSquare },
       ]
     }
   ],
 };
 
-function NavItem({ item, isActive, onClick }) {
+function NavItem({ item, isActive, onClick, isSubItem = false }) {
   const Icon = item.icon;
   
   return (
@@ -118,9 +144,9 @@ function NavItem({ item, isActive, onClick }) {
       to={item.to} 
       end={item.end} 
       onClick={onClick}
-      className={`relative flex items-center gap-3 px-6 py-3.5 transition-all duration-200 group ${
+      className={`relative flex items-center gap-3 py-3 transition-all duration-200 group ${isSubItem ? 'pl-10 pr-6' : 'px-6'} ${
         isActive
-          ? 'bg-indigo-50 text-indigo-700 font-extrabold shadow-sm'
+          ? 'bg-indigo-50/80 text-indigo-700 font-extrabold'
           : 'text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-800'
       }`}
     >
@@ -128,12 +154,55 @@ function NavItem({ item, isActive, onClick }) {
       <div className={`absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 transition-transform duration-200 ${isActive ? 'scale-y-100' : 'scale-y-0'}`}></div>
 
       <Icon 
-        size={20} 
+        size={isSubItem ? 18 : 20} 
         strokeWidth={isActive ? 2.5 : 2} 
         className={`shrink-0 transition-colors duration-200 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} 
       />
-      <span className="text-[13px] uppercase tracking-wide truncate mt-0.5">{item.label}</span>
+      <span className={`text-[13px] tracking-wide truncate mt-0.5 ${isSubItem ? '' : 'uppercase'}`}>{item.label}</span>
     </NavLink>
+  );
+}
+
+function NavGroup({ group, isActiveItem, onClickItem }) {
+  const isGroupActive = group.items.some(isActiveItem);
+  const [isOpen, setIsOpen] = useState(isGroupActive);
+
+  // Mostrar directamente sin acordeón si es la categoría principal o no requiere agrupación
+  const isFlat = group.category === 'Principal' || group.category === 'Menú' || group.items.length === 1;
+
+  if (isFlat) {
+    return (
+      <div className="mb-2">
+        {group.category !== 'Menú' && group.category !== 'Principal' && (
+           <p className="px-6 text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 mt-4">{group.category}</p>
+        )}
+        {group.items.map(item => (
+          <NavItem key={item.to} item={item} isActive={isActiveItem(item)} onClick={onClickItem} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-1">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-6 py-3 text-left transition-colors hover:bg-slate-50 group"
+      >
+        <span className={`text-[11px] font-black uppercase tracking-wider ${isOpen ? 'text-indigo-600' : 'text-slate-500 group-hover:text-slate-700'}`}>
+          {group.category}
+        </span>
+        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-indigo-500' : ''}`} />
+      </button>
+      
+      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="pb-2">
+          {group.items.map(item => (
+            <NavItem key={item.to} item={item} isActive={isActiveItem(item)} onClick={onClickItem} isSubItem={true} />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -143,6 +212,7 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   if (!user) return null;
 
@@ -192,16 +262,12 @@ export default function DashboardLayout() {
         {/* NAVIGATION LINKS */}
         <nav className="flex-1 flex flex-col gap-0 overflow-y-auto hide-scrollbar pt-4 pb-6">
           {navItems.map((group, idx) => (
-            <div key={idx} className="mb-2">
-              {group.items.map(item => (
-                <NavItem 
-                  key={item.to} 
-                  item={item} 
-                  isActive={isActive(item)} 
-                  onClick={() => setMobileMenuOpen(false)} 
-                />
-              ))}
-            </div>
+            <NavGroup 
+              key={idx} 
+              group={group} 
+              isActiveItem={isActive} 
+              onClickItem={() => setMobileMenuOpen(false)} 
+            />
           ))}
         </nav>
 
@@ -225,7 +291,7 @@ export default function DashboardLayout() {
             </div>
           </Link>
           <button
-            onClick={logout}
+            onClick={() => setShowLogoutModal(true)}
             className="w-full flex items-center justify-center gap-2 p-3.5 bg-white border-t border-slate-200 text-[13px] font-bold text-red-600 hover:bg-red-50 transition-colors"
           >
             <LogOut size={16} strokeWidth={2.5} />
@@ -298,6 +364,49 @@ export default function DashboardLayout() {
           </div>
         </main>
       </div>
+
+      {/* ==============================
+          MODAL DE CERRAR SESIÓN
+          ============================== */}
+      {showLogoutModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
+          zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '24px', animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff', borderRadius: '24px', width: '100%', maxWidth: '400px',
+            padding: '32px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', textAlign: 'center'
+          }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#fef2f2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto' }}>
+              <LogOut size={32} />
+            </div>
+            <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: '0 0 12px 0' }}>¿Cerrar Sesión?</h2>
+            <p style={{ fontSize: '15px', color: '#64748b', margin: '0 0 32px 0', lineHeight: '1.5' }}>
+              Estás a punto de salir de AcademicScope. Tendrás que volver a ingresar tus credenciales para acceder.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => setShowLogoutModal(false)}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', backgroundColor: '#ffffff', color: '#475569', fontWeight: '700', fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => { setShowLogoutModal(false); logout(); }}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', backgroundColor: '#ef4444', color: '#ffffff', fontWeight: '700', fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(239,68,68,0.2)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+              >
+                Sí, salir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
