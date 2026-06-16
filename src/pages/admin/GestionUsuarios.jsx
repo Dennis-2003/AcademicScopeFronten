@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../services/api';
 import { 
   Users,
@@ -389,23 +390,27 @@ export default function GestionUsuarios() {
         <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
-      <ConfirmModal
-        isOpen={!!deleteTarget}
-        title="Eliminar usuario"
-        message="¿Estás seguro? Esta acción no se puede deshacer."
-        confirmLabel="Eliminar"
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
+      {deleteTarget && createPortal(
+        <ConfirmModal
+          isOpen={true}
+          title="Eliminar usuario"
+          message="¿Estás seguro? Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />,
+        document.body
+      )}
 
       {/* --- MODAL NUEVO USUARIO --- */}
-      {showModal && (
+      {showModal && createPortal(
         <div 
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)' }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)' }}
           onClick={() => setShowModal(false)}
         >
           <div 
-            style={{ width: '100%', maxWidth: '600px', backgroundColor: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative' }}
+            style={{ width: '90vw', maxWidth: '600px', backgroundColor: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative', flexShrink: 0 }}
             onClick={e => e.stopPropagation()}
           >
             <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-slate-50/50">
@@ -571,7 +576,8 @@ export default function GestionUsuarios() {
               </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       
       </>)}

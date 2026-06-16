@@ -318,7 +318,7 @@ function RevisionEntregasModal({ tarea, onClose }) {
     <div className="fixed inset-0 z-[200] flex justify-end">
       {/* Fondo totalmente transparente, sin desenfoque ni oscurecimiento */}
       <div className="absolute inset-0 bg-transparent" onClick={onClose}></div>
-      <div className="relative w-full max-w-2xl bg-white h-full shadow-[0_0_40px_rgba(0,0,0,0.1)] flex flex-col animate-slide-in-right">
+      <div className="relative w-full max-w-2xl bg-white h-full shadow-[0_0_40px_rgba(0,0,0,0.1)] flex flex-col animate-slide-in-right shrink-0">
         
         <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
           <div>

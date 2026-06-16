@@ -160,7 +160,7 @@ function ConfiguracionEvaluacionesModal({ curso, onClose }) {
   return (
     <div className="fixed inset-0 z-[200] flex justify-end">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative w-full max-w-[450px] bg-white h-full shadow-2xl flex flex-col animate-slide-in-right">
+      <div className="relative w-full max-w-[450px] bg-white h-full shadow-2xl flex flex-col animate-slide-in-right shrink-0">
         
         <div className="px-6 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
           <div>
@@ -604,7 +604,7 @@ export default function GestionCursos() {
             onClick={closeAndResetModal}
           ></div>
 
-          <div className="relative w-full max-w-[400px] bg-white h-full shadow-[calc(-20px)_0_60px_-15px_rgba(0,0,0,0.3)] flex flex-col animate-slide-in-right">
+          <div className="relative w-full max-w-[400px] bg-white h-full shadow-[calc(-20px)_0_60px_-15px_rgba(0,0,0,0.3)] flex flex-col animate-slide-in-right shrink-0">
             
             <div className="px-7 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
               <div>

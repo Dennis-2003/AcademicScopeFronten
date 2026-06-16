@@ -87,7 +87,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       />
       
       {/* Palette */}
-      <div className="relative w-full max-w-2xl bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-200/60 overflow-hidden animate-slide-up flex flex-col">
+      <div className="relative w-full max-w-2xl bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-200/60 overflow-hidden animate-slide-up flex flex-col shrink-0">
         {/* Search Input */}
         <div className="flex items-center px-4 py-4 border-b border-slate-100">
           <Search size={22} className="text-slate-400 mr-3" />

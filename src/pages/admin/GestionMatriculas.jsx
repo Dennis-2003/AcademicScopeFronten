@@ -315,7 +315,7 @@ export default function GestionMatriculas({ isEmbedded = false }) {
             onClick={closeModal}
           ></div>
 
-          <div className="relative w-full max-w-[400px] bg-white h-full shadow-2xl flex flex-col animate-slide-in-right">
+          <div className="relative w-full max-w-[400px] bg-white h-full shadow-2xl flex flex-col animate-slide-in-right shrink-0">
             
             <div className="px-7 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
               <div>

@@ -236,7 +236,7 @@ export default function GestionFinanzas() {
         >
           <div 
             className="bg-white rounded-3xl overflow-hidden shadow-2xl"
-            style={{ width: '400px', maxWidth: '90vw', display: 'flex', flexDirection: 'column' }}
+            style={{ width: '400px', maxWidth: '90vw', display: 'flex', flexDirection: 'column', flexShrink: 0 }}
           >
             <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800">Nuevo Aporte/Cuota</h3>
