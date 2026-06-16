@@ -11,12 +11,7 @@ import autoTable from 'jspdf-autotable';
 import ReportesAsistencia from './ReportesAsistencia';
 
 export default function GestionEvaluaciones() {
-  const [evaluaciones, setEvaluaciones] = useState([
-    { id: 1, nombre: 'Primer Bimestre', fechaInicio: '2026-03-01', fechaFin: '2026-05-15', estado: 'CERRADO' },
-    { id: 2, nombre: 'Segundo Bimestre', fechaInicio: '2026-05-16', fechaFin: '2026-07-31', estado: 'ACTIVO' },
-    { id: 3, nombre: 'Tercer Bimestre', fechaInicio: '2026-08-01', fechaFin: '2026-10-15', estado: 'PROGRAMADO' },
-    { id: 4, nombre: 'Cuarto Bimestre', fechaInicio: '2026-10-16', fechaFin: '2026-12-20', estado: 'PROGRAMADO' }
-  ]);
+  const [evaluaciones, setEvaluaciones] = useState([]);
   
   const [showModal, setShowModal] = useState(false);
   const [evaluacionAEditar, setEvaluacionAEditar] = useState(null);
@@ -26,8 +21,8 @@ export default function GestionEvaluaciones() {
   const [toastMsg, setToastMsg] = useState('');
 
   // TABS STATE
-  const [activeTab, setActiveTab] = useState('cronograma'); // 'cronograma' | 'libretas'
-  const [filtroPeriodo, setFiltroPeriodo] = useState('2'); 
+  const [activeTab, setActiveTab] = useState('cronograma');
+  const [filtroPeriodo, setFiltroPeriodo] = useState('');
   const [filtroGrado, setFiltroGrado] = useState('');
 
   // ESTADO PARA EL MODAL DE DETALLES
@@ -39,6 +34,11 @@ export default function GestionEvaluaciones() {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [estudiantePendienteDescarga, setEstudiantePendienteDescarga] = useState(null);
   const [configInstitucion, setConfigInstitucion] = useState({ colegio: '', director: '', tutor: '', logoBase64: '' });
+  
+  // ESTADO PARA DATOS REALES DE GRADOS Y ESTUDIANTES
+  const [grados, setGrados] = useState([]);
+  const [estudiantes, setEstudiantes] = useState([]);
+  const [cargandoEstudiantes, setCargandoEstudiantes] = useState(false);
   
   // Cargar configuración desde el backend
   useEffect(() => {
@@ -55,12 +55,66 @@ export default function GestionEvaluaciones() {
       .catch(err => console.error("Error cargando configuración de institución", err));
   }, []);
 
-  const mockEstudiantes = [
-    { id: 1, nombre: 'Ana García', promedio: 16.5, estado: 'Aprobado', asistencia: '95%' },
-    { id: 2, nombre: 'Carlos Ruiz', promedio: 10.2, estado: 'Desaprobado', asistencia: '80%' },
-    { id: 3, nombre: 'Lucía Torres', promedio: 18.0, estado: 'Aprobado', asistencia: '100%' },
-    { id: 4, nombre: 'Marcos Díaz', promedio: 13.5, estado: 'Aprobado', asistencia: '92%' },
-  ];
+  // Cargar periodos académicos desde el backend
+  useEffect(() => {
+    api.get('/periodos')
+      .then(res => {
+        const mapped = res.data.map(p => ({
+          id: p.id,
+          nombre: p.nombre,
+          fechaInicio: p.fechaInicio,
+          fechaFin: p.fechaFin,
+          estado: p.activo ? 'ACTIVO' : (p.fechaFin && new Date(p.fechaFin) < new Date() ? 'CERRADO' : 'PROGRAMADO')
+        }));
+        setEvaluaciones(mapped);
+      })
+      .catch(err => console.error("Error cargando periodos", err));
+  }, []);
+
+  // Cargar grados desde el backend
+  useEffect(() => {
+    api.get('/grados')
+      .then(res => setGrados(res.data))
+      .catch(err => console.error("Error cargando grados", err));
+  }, []);
+
+  // Cargar estudiantes matriculados por grado
+  useEffect(() => {
+    if (!filtroGrado) { setEstudiantes([]); return; }
+    setCargandoEstudiantes(true);
+    api.get(`/matriculas/grado/${filtroGrado}`)
+      .then(async res => {
+        const matriculas = res.data;
+        const estudiantesData = await Promise.all(matriculas.map(async m => {
+          const est = m.estudiante;
+          try {
+            const califRes = await api.get(`/calificaciones/estudiante/${est.id}`);
+            const califs = califRes.data;
+            const promedio = califs.length > 0
+              ? califs.reduce((sum, c) => sum + c.nota, 0) / califs.length
+              : 0;
+            return {
+              id: est.id,
+              nombre: `${est.nombre} ${est.apellido}`,
+              promedio: Math.round(promedio * 10) / 10,
+              estado: promedio >= 11 ? 'Aprobado' : 'Desaprobado',
+              estudianteId: est.id
+            };
+          } catch {
+            return {
+              id: est.id,
+              nombre: `${est.nombre} ${est.apellido}`,
+              promedio: 0,
+              estado: 'Sin notas',
+              estudianteId: est.id
+            };
+          }
+        }));
+        setEstudiantes(estudiantesData);
+      })
+      .catch(err => console.error("Error cargando estudiantes", err))
+      .finally(() => setCargandoEstudiantes(false));
+  }, [filtroGrado]);
 
   const openNewModal = () => {
     setEvaluacionAEditar(null);
@@ -98,14 +152,36 @@ export default function GestionEvaluaciones() {
       }
     }
 
+    const payload = {
+      nombre: form.nombre,
+      fechaInicio: form.fechaInicio,
+      fechaFin: form.fechaFin,
+      activo: form.estado === 'ACTIVO'
+    };
+
     if (evaluacionAEditar) {
-      setEvaluaciones(evaluaciones.map(ev => ev.id === evaluacionAEditar.id ? { ...form, id: ev.id } : ev));
-      mostrarToast('Periodo actualizado correctamente.');
+      api.put(`/periodos/${evaluacionAEditar.id}`, payload)
+        .then(res => {
+          const updated = { ...res.data, estado: res.data.activo ? 'ACTIVO' : 'PROGRAMADO' };
+          setEvaluaciones(evaluaciones.map(ev => ev.id === evaluacionAEditar.id ? updated : ev));
+          mostrarToast('Periodo actualizado correctamente.');
+          setShowModal(false);
+        })
+        .catch(err => {
+          setErrorForm('Error al actualizar el periodo: ' + (err.response?.data?.mensaje || err.message));
+        });
     } else {
-      setEvaluaciones([...evaluaciones, { ...form, id: Date.now(), estado: 'PROGRAMADO' }]);
-      mostrarToast('Periodo creado correctamente.');
+      api.post('/periodos', payload)
+        .then(res => {
+          const nuevo = { ...res.data, estado: res.data.activo ? 'ACTIVO' : 'PROGRAMADO' };
+          setEvaluaciones([...evaluaciones, nuevo]);
+          mostrarToast('Periodo creado correctamente.');
+          setShowModal(false);
+        })
+        .catch(err => {
+          setErrorForm('Error al crear el periodo: ' + (err.response?.data?.mensaje || err.message));
+        });
     }
-    setShowModal(false);
   };
 
   const mostrarToast = (msg) => {
@@ -113,60 +189,109 @@ export default function GestionEvaluaciones() {
     setTimeout(() => setToastMsg(''), 4000);
   };
 
-  // BACKEND SIMULADO: Función asíncrona para traer notas por competencias
-  const fetchDetallesEstudiante = async (estudianteNombre) => {
+  const fetchDetallesEstudiante = async (estudianteId) => {
     setCargandoDetalles(true);
     setShowDetalleModal(true);
     setDetalleEstudiante(null);
 
-    // Simulamos el retraso de internet (700ms)
-    await new Promise(resolve => setTimeout(resolve, 700));
+    try {
+      const [califRes, periodoRes] = await Promise.all([
+        api.get(`/calificaciones/estudiante/${estudianteId}`),
+        api.get('/periodos/activo')
+      ]);
 
-    // Generamos una data rica basada en el nombre para dar sensación de backend real
-    const mockDetalle = {
-      nombre: estudianteNombre,
-      grado: "1ro de Secundaria - Sección A",
-      periodo: "Segundo Bimestre",
-      cursos: [
-        {
-          nombre: "Matemáticas",
-          promedio: estudianteNombre === 'Carlos Ruiz' ? 10.5 : 16.5,
-          competencias: [
-            { nombre: "Resuelve problemas de cantidad", nota: estudianteNombre === 'Carlos Ruiz' ? 10 : 17 },
-            { nombre: "Resuelve problemas de regularidad, equivalencia y cambio", nota: estudianteNombre === 'Carlos Ruiz' ? 11 : 16 }
-          ]
-        },
-        {
-          nombre: "Comunicación",
-          promedio: estudianteNombre === 'Carlos Ruiz' ? 9.5 : 17.0,
-          competencias: [
-            { nombre: "Lee diversos tipos de textos", nota: estudianteNombre === 'Carlos Ruiz' ? 9 : 18 },
-            { nombre: "Escribe diversos tipos de textos", nota: estudianteNombre === 'Carlos Ruiz' ? 10 : 16 }
-          ]
-        },
-        {
-          nombre: "Ciencias y Tecnología",
-          promedio: estudianteNombre === 'Carlos Ruiz' ? 10.6 : 15.5,
-          competencias: [
-            { nombre: "Indaga mediante métodos científicos", nota: estudianteNombre === 'Carlos Ruiz' ? 10 : 15 },
-            { nombre: "Explica el mundo físico", nota: estudianteNombre === 'Carlos Ruiz' ? 11 : 16 }
-          ]
-        }
-      ]
-    };
+      const calificaciones = califRes.data;
+      const periodoNombre = periodoRes.data?.nombre || 'Periodo actual';
 
-    setDetalleEstudiante(mockDetalle);
-    setCargandoDetalles(false);
+      const cursosMap = {};
+      calificaciones.forEach(c => {
+        const cursoNombre = c.evaluacion?.curso?.nombre || 'Curso';
+        if (!cursosMap[cursoNombre]) cursosMap[cursoNombre] = [];
+        cursosMap[cursoNombre].push({ nombre: c.evaluacion?.nombre, nota: c.nota });
+      });
+
+      const cursos = Object.entries(cursosMap).map(([nombre, comps]) => {
+        const promedio = comps.reduce((s, c) => s + c.nota, 0) / comps.length;
+        return { nombre, promedio: Math.round(promedio * 10) / 10, competencias: comps };
+      });
+
+      setDetalleEstudiante({ nombre: '', grado: '', periodo: periodoNombre, cursos });
+    } catch (err) {
+      console.error("Error cargando detalles del estudiante", err);
+      setDetalleEstudiante({ nombre: '', grado: '', periodo: 'Error', cursos: [] });
+    } finally {
+      setCargandoDetalles(false);
+    }
   };
 
-  // BACKEND SIMULADO: Comprobación de Configuración y Descarga
-  const handleDescargarLibreta = (estudianteNombre = "Aula_Completa") => {
+  const handleDescargarLibreta = async (estudianteNombre = "Aula_Completa") => {
     if (!configInstitucion.colegio || !configInstitucion.director || !configInstitucion.tutor) {
       setEstudiantePendienteDescarga(estudianteNombre);
       setShowConfigModal(true);
       return;
     }
-    generarPDFoficial(estudianteNombre);
+
+    const periodo = evaluaciones.find(ev => ev.estado === 'ACTIVO');
+    const periodoNombre = periodo?.nombre || 'Periodo actual';
+
+    try {
+      if (estudianteNombre === "Aula_Completa") {
+        const allDetalles = await Promise.all(estudiantes.map(async est => {
+          const res = await api.get(`/calificaciones/estudiante/${est.estudianteId}`);
+          return { nombre: est.nombre, calificaciones: res.data };
+        }));
+        // Generar consolidado de aula con todos los estudiantes
+        const detalle = {
+          nombre: "Consolidado de Aula",
+          grado: grados.find(g => g.id === Number(filtroGrado))?.nombre || '',
+          periodo: periodoNombre,
+          cursos: allDetalles.flatMap(d => {
+            const cursosMap = {};
+            d.calificaciones.forEach(c => {
+              const cn = c.evaluacion?.curso?.nombre || 'Curso';
+              if (!cursosMap[cn]) cursosMap[cn] = [];
+              cursosMap[cn].push(c.nota);
+            });
+            return Object.entries(cursosMap).map(([nombre, notas]) => ({
+              nombre,
+              promedio: Math.round((notas.reduce((s, n) => s + n, 0) / notas.length) * 10) / 10,
+              competencias: d.calificaciones.filter(c => (c.evaluacion?.curso?.nombre || 'Curso') === nombre).map(c => ({
+                nombre: c.evaluacion?.nombre || 'Evaluacion',
+                nota: c.nota
+              }))
+            }));
+          }).reduce((acc, curso) => {
+            const existente = acc.find(c => c.nombre === curso.nombre);
+            if (existente) {
+              existente.competencias.push(...curso.competencias);
+              existente.promedio = Math.round((existente.competencias.reduce((s, c) => s + c.nota, 0) / existente.competencias.length) * 10) / 10;
+            } else acc.push(curso);
+            return acc;
+          }, [])
+        };
+        generarPDFoficial(detalle);
+      } else {
+        const estudiante = estudiantes.find(e => e.nombre === estudianteNombre);
+        if (!estudiante) { mostrarToast('Estudiante no encontrado'); return; }
+        const res = await api.get(`/calificaciones/estudiante/${estudiante.estudianteId}`);
+        const calificaciones = res.data;
+        const cursosMap = {};
+        calificaciones.forEach(c => {
+          const cn = c.evaluacion?.curso?.nombre || 'Curso';
+          if (!cursosMap[cn]) cursosMap[cn] = [];
+          cursosMap[cn].push({ nombre: c.evaluacion?.nombre, nota: c.nota });
+        });
+        const cursos = Object.entries(cursosMap).map(([nombre, comps]) => ({
+          nombre,
+          promedio: Math.round((comps.reduce((s, c) => s + c.nota, 0) / comps.length) * 10) / 10,
+          competencias: comps
+        }));
+        generarPDFoficial({ nombre: estudianteNombre, grado: '', periodo: periodoNombre, cursos });
+      }
+    } catch (err) {
+      console.error("Error generando libreta", err);
+      mostrarToast('Error al generar libreta');
+    }
   };
 
   const handleLogoUpload = (e) => {
@@ -198,43 +323,10 @@ export default function GestionEvaluaciones() {
     });
   };
 
-  const generarPDFoficial = (estudianteNombre) => {
-    mostrarToast(`Generando y descargando PDF oficial de ${estudianteNombre}...`);
+  const generarPDFoficial = (detalle) => {
+    mostrarToast(`Generando y descargando PDF oficial de ${detalle.nombre}...`);
     
-    setTimeout(() => {
-      const mockDetalle = {
-        nombre: estudianteNombre === "Aula_Completa" ? "Consolidado de Aula" : estudianteNombre,
-        grado: "1ro de Secundaria - Sección A",
-        periodo: "Segundo Bimestre",
-        cursos: [
-          {
-            nombre: "Matemáticas",
-            promedio: estudianteNombre === 'Carlos Ruiz' ? 10.5 : 16.5,
-            competencias: [
-              { nombre: "Resuelve problemas de cantidad", nota: estudianteNombre === 'Carlos Ruiz' ? 10 : 17 },
-              { nombre: "Resuelve problemas de regularidad", nota: estudianteNombre === 'Carlos Ruiz' ? 11 : 16 }
-            ]
-          },
-          {
-            nombre: "Comunicación",
-            promedio: estudianteNombre === 'Carlos Ruiz' ? 9.5 : 17.0,
-            competencias: [
-              { nombre: "Lee diversos tipos de textos", nota: estudianteNombre === 'Carlos Ruiz' ? 9 : 18 },
-              { nombre: "Escribe diversos tipos de textos", nota: estudianteNombre === 'Carlos Ruiz' ? 10 : 16 }
-            ]
-          },
-          {
-            nombre: "Ciencias y Tecnología",
-            promedio: estudianteNombre === 'Carlos Ruiz' ? 10.6 : 15.5,
-            competencias: [
-              { nombre: "Indaga mediante métodos científicos", nota: estudianteNombre === 'Carlos Ruiz' ? 10 : 15 },
-              { nombre: "Explica el mundo físico", nota: estudianteNombre === 'Carlos Ruiz' ? 11 : 16 }
-            ]
-          }
-        ]
-      };
-
-      const doc = new jsPDF();
+    const doc = new jsPDF();
       
       // CONFIGURACIÓN DE COLORES
       const primaryColor = [79, 70, 229]; // Indigo-600
@@ -276,7 +368,7 @@ export default function GestionEvaluaciones() {
       doc.text("Estudiante:", 15, 53);
       doc.setTextColor(textColor[0], textColor[1], textColor[2]);
       doc.setFont(undefined, 'bold');
-      doc.text(mockDetalle.nombre, 38, 53);
+      doc.text(detalle.nombre, 38, 53);
 
       doc.setTextColor(lightText[0], lightText[1], lightText[2]);
       doc.setFont(undefined, 'normal');
@@ -305,7 +397,7 @@ export default function GestionEvaluaciones() {
 
       // Tabla Complex MINEDU
       const tableBody = [];
-      mockDetalle.cursos.forEach(curso => {
+      detalle.cursos.forEach(curso => {
         curso.competencias.forEach((comp, index) => {
           if (index === 0) {
             tableBody.push([
@@ -388,8 +480,20 @@ export default function GestionEvaluaciones() {
       doc.setTextColor(148, 163, 184); // text-slate-400
       doc.text(`Documento generado automáticamente por el Centro de Evaluaciones - ${configInstitucion.colegio}.`, 105, finalY + 70, { align: "center" });
 
-      doc.save(`Libreta_${mockDetalle.nombre.replace(/ /g, '_')}_2026.pdf`);
-    }, 1500);
+      doc.save(`Libreta_${detalle.nombre.replace(/ /g, '_')}_2026.pdf`);
+  };
+
+  const togglePeriodoActivo = (id, activo) => {
+    const ev = evaluaciones.find(e => e.id === id);
+    if (!ev) return;
+    api.put(`/periodos/${id}`, {
+      nombre: ev.nombre,
+      fechaInicio: ev.fechaInicio,
+      fechaFin: ev.fechaFin,
+      activo
+    }).then(() => {
+      setEvaluaciones(evaluaciones.map(e => e.id === id ? { ...e, estado: activo ? 'ACTIVO' : 'CERRADO' } : e));
+    }).catch(err => console.error("Error actualizando periodo", err));
   };
 
   const handleAbrirPeriodo = (id) => {
@@ -399,14 +503,14 @@ export default function GestionEvaluaciones() {
       return;
     }
     if (window.confirm('¿Estás seguro de iniciar este periodo de evaluación? Los docentes podrán ingresar notas.')) {
-      setEvaluaciones(evaluaciones.map(ev => ev.id === id ? { ...ev, estado: 'ACTIVO' } : ev));
+      togglePeriodoActivo(id, true);
       mostrarToast('Periodo iniciado. Docentes habilitados.');
     }
   };
 
   const handleCerrarPeriodo = (id) => {
     if (window.confirm('¿Estás seguro de CERRAR este periodo? Ya no se podrán modificar las notas regulares.')) {
-      setEvaluaciones(evaluaciones.map(ev => ev.id === id ? { ...ev, estado: 'CERRADO' } : ev));
+      togglePeriodoActivo(id, false);
       mostrarToast('Periodo cerrado exitosamente.');
     }
   };
@@ -419,15 +523,19 @@ export default function GestionEvaluaciones() {
     }
     const pwd = window.prompt('ACCESO RESTRINGIDO: Escribe "CONFIRMAR" en mayúsculas para reabrir este periodo cerrado.');
     if (pwd === 'CONFIRMAR') {
-      setEvaluaciones(evaluaciones.map(ev => ev.id === id ? { ...ev, estado: 'ACTIVO' } : ev));
+      togglePeriodoActivo(id, true);
       mostrarToast('Periodo reabierto excepcionalmente.');
     }
   };
 
   const deleteEvaluacion = (id) => {
     if (window.confirm('¿Eliminar definitivamente este periodo de evaluación? Solo debes hacerlo si fue un error de creación.')) {
-      setEvaluaciones(evaluaciones.filter(ev => ev.id !== id));
-      mostrarToast('Periodo eliminado.');
+      api.delete(`/periodos/${id}`)
+        .then(() => {
+          setEvaluaciones(evaluaciones.filter(ev => ev.id !== id));
+          mostrarToast('Periodo eliminado.');
+        })
+        .catch(err => console.error("Error eliminando periodo", err));
     }
   };
 
@@ -624,9 +732,8 @@ export default function GestionEvaluaciones() {
                 onChange={e => setFiltroGrado(e.target.value)}
                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
               >
-                <option value="">1ro de Secundaria - Sección A</option>
-                <option value="2">2do de Secundaria - Sección B</option>
-                <option value="3">3ro de Secundaria - Sección A</option>
+                <option value="">Seleccione un grado</option>
+                {grados.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
               </select>
             </div>
           </div>
@@ -634,7 +741,7 @@ export default function GestionEvaluaciones() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <h2 className="text-[15px] font-bold text-slate-700">Rendimiento y Libretas Oficiales</h2>
-              <span className="text-xs font-bold text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full shadow-sm">{mockEstudiantes.length} Estudiantes encontrados</span>
+              <span className="text-xs font-bold text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full shadow-sm">{cargandoEstudiantes ? 'Cargando...' : estudiantes.length + ' Estudiantes encontrados'}</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -648,13 +755,17 @@ export default function GestionEvaluaciones() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {mockEstudiantes.map(est => (
+                  {cargandoEstudiantes ? (
+                    <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-500 font-bold">Cargando estudiantes...</td></tr>
+                  ) : estudiantes.length === 0 ? (
+                    <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-500 font-bold">Seleccione un grado para ver los estudiantes</td></tr>
+                  ) : estudiantes.map(est => (
                     <tr key={est.id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-6 py-4 font-bold text-slate-800 text-[14px] flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">{est.nombre.charAt(0)}</div>
                         {est.nombre}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-600">{est.asistencia}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-600">-</td>
                       <td className="px-6 py-4 font-bold text-[15px]">
                         <span className={est.promedio >= 11 ? 'text-emerald-600' : 'text-red-600'}>{est.promedio.toFixed(1)}</span>
                       </td>
@@ -667,7 +778,7 @@ export default function GestionEvaluaciones() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button 
-                            onClick={() => fetchDetallesEstudiante(est.nombre)}
+                            onClick={() => fetchDetallesEstudiante(est.estudianteId)}
                             className="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm" 
                             title="Ver Detalle de Notas"
                           >

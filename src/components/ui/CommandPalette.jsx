@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Search, X, BookOpen, User, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 
 export default function CommandPalette({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
 
   // Listen for Ctrl+K
@@ -12,12 +15,6 @@ export default function CommandPalette({ isOpen, onClose }) {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         if (isOpen) onClose();
-        else {
-          // Open palette
-          // Since state is managed in parent, this requires parent to handle it ideally,
-          // but we can dispatch a custom event if needed. In this case, parent passes isOpen and onClose,
-          // so parent should have the event listener. 
-        }
       }
     };
     document.addEventListener('keydown', down);
@@ -37,6 +34,42 @@ export default function CommandPalette({ isOpen, onClose }) {
     return () => document.removeEventListener('keydown', down);
   }, [isOpen, onClose]);
 
+  // Buscar usuarios y cursos desde el backend
+  useEffect(() => {
+    if (!query.trim()) { setResults([]); return; }
+    setCargando(true);
+    const timer = setTimeout(() => {
+      Promise.all([
+        api.get('/usuarios').catch(() => ({ data: [] })),
+        api.get('/cursos').catch(() => ({ data: [] }))
+      ]).then(([usersRes, cursosRes]) => {
+        const q = query.toLowerCase();
+        const users = (usersRes.data || []).filter(u =>
+          `${u.nombre} ${u.apellido}`.toLowerCase().includes(q) ||
+          u.dni?.includes(q)
+        ).map(u => ({
+          id: u.id, type: 'user',
+          title: `${u.nombre} ${u.apellido}`,
+          subtitle: `${u.rol} - DNI: ${u.dni}`,
+          icon: User,
+          path: '/dashboard/admin/usuarios'
+        }));
+        const cursos = (cursosRes.data || []).filter(c =>
+          c.nombre?.toLowerCase().includes(q) ||
+          c.codigo?.toLowerCase().includes(q)
+        ).map(c => ({
+          id: c.id, type: 'course',
+          title: c.nombre,
+          subtitle: c.codigo || '',
+          icon: BookOpen,
+          path: '/dashboard/admin/cursos'
+        }));
+        setResults([...cursos, ...users].slice(0, 10));
+      }).finally(() => setCargando(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   if (!isOpen) return null;
 
   const handleSelect = (path) => {
@@ -44,13 +77,6 @@ export default function CommandPalette({ isOpen, onClose }) {
     setQuery('');
     navigate(path);
   };
-
-  // Mock results for now
-  const results = [
-    { id: 1, type: 'course', title: 'Matemática Avanzada', subtitle: '4to Grado Secundaria', icon: BookOpen, path: '/dashboard/admin/cursos' },
-    { id: 2, type: 'user', title: 'García, María', subtitle: 'Estudiante - DNI: 72839102', icon: User, path: '/dashboard/admin/usuarios' },
-    { id: 3, type: 'user', title: 'Torres, Carlos', subtitle: 'Docente - Ciencias', icon: User, path: '/dashboard/admin/usuarios' }
-  ].filter(r => r.title.toLowerCase().includes(query.toLowerCase()) || r.subtitle.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4">
@@ -80,7 +106,11 @@ export default function CommandPalette({ isOpen, onClose }) {
 
         {/* Results */}
         <div className="max-h-[60vh] overflow-y-auto p-2 custom-scrollbar">
-          {query.length > 0 && results.length === 0 ? (
+          {cargando ? (
+            <div className="p-8 text-center text-slate-500 font-medium">
+              Buscando...
+            </div>
+          ) : query.length > 0 && results.length === 0 ? (
             <div className="p-8 text-center text-slate-500 font-medium">
               No se encontraron resultados para "{query}"
             </div>
@@ -88,7 +118,7 @@ export default function CommandPalette({ isOpen, onClose }) {
             <div className="flex flex-col gap-1">
               {query.length === 0 && (
                 <div className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Sugerencias recientes
+                  Escribe para buscar usuarios o cursos
                 </div>
               )}
               {results.map((res) => {

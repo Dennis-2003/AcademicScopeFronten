@@ -6,16 +6,16 @@ import {
   Save,
   CheckCircle2
 } from 'lucide-react';
+import api from '../../services/api';
 
 export default function ConfiguracionInstitucion() {
   const [tipo, setTipo] = useState('PUBLICO');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    // Leer configuración existente si la hay
-    const config = localStorage.getItem('academicScope_config');
-    if (config) {
-      setTipo(JSON.parse(config).tipoInstitucion);
+    const stored = localStorage.getItem('academicScope_config');
+    if (stored) {
+      setTipo(JSON.parse(stored).tipoInstitucion);
     }
   }, []);
 
