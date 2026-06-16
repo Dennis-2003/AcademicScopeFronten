@@ -191,14 +191,17 @@ export default function Recursos() {
         )}
       </div>
 
-      <ConfirmModal
-        isOpen={!!deleteTarget}
-        title="Eliminar recurso"
-        message="¿Estás seguro de eliminar este recurso? Esta acción no se puede deshacer."
-        confirmLabel="Eliminar"
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
+      {deleteTarget && createPortal(
+        <ConfirmModal
+          isOpen={true}
+          title="Eliminar recurso"
+          message="¿Estás seguro de eliminar este recurso? Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />,
+        document.body
+      )}
 
       {/* MODAL SUBIR RECURSO */}
       {mostrandoModal && createPortal(
