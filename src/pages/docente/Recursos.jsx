@@ -92,7 +92,7 @@ export default function Recursos() {
     if (!deleteTarget) return;
     try {
       await eliminarRecurso(deleteTarget);
-      cargarDatos();
+      await cargarDatos();
     } catch (err) {
       console.error(err);
     } finally {
