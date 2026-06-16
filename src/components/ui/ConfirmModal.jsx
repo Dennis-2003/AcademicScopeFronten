@@ -10,7 +10,7 @@ export default function ConfirmModal({ isOpen, title, message, confirmLabel = 'C
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" onClick={onCancel}>
       <div
-        className="bg-white rounded-3xl p-6 w-[90%] max-w-md shadow-xl animate-fade-in"
+        className="bg-white rounded-3xl p-6 w-[90vw] md:w-[480px] shrink-0 shadow-xl animate-fade-in"
         onClick={e => e.stopPropagation()}
       >
         <div className={`w-12 h-12 ${colors.bg} ${colors.text} rounded-full flex items-center justify-center mx-auto mb-4`}>

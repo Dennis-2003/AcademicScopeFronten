@@ -140,7 +140,7 @@ export default function Asignaciones() {
       {/* MODAL CREAR TAREA */}
       {mostrandoModal && createPortal(
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] p-4 flex justify-center items-center overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 w-[90%] max-w-[450px] shadow-xl animate-fade-in mx-auto">
+          <div className="bg-white rounded-3xl p-6 w-[90vw] md:w-[480px] shrink-0 shadow-xl animate-fade-in">
             <h2 className="text-xl font-bold text-slate-800 mb-6">Crear Nueva Tarea</h2>
               
               <div className="space-y-4">
