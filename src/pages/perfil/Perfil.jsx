@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Lock, Save, AlertCircle, CheckCircle2, KeyRound, Shield, Camera, Mail, Edit3 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 export default function Perfil() {
   const { user, updateUser } = useAuth();
@@ -158,7 +158,7 @@ export default function Perfil() {
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
                 ) : user.avatarUrl ? (
-                  <img src={`http://localhost:8080/api/usuarios/avatar/${user.avatarUrl}`} alt="avatar" className="w-full h-full object-cover" />
+                  <img src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:8080/api/usuarios/avatar/${user.avatarUrl}`} alt="avatar" className="w-full h-full object-cover" />
                 ) : (
                   <span>{(user.nombre?.charAt(0) || '') + (user.apellido?.charAt(0) || '')}</span>
                 )}

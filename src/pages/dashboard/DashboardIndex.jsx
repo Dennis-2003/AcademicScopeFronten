@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import api from "../services/api";
-import DocenteDashboard from "./dashboards/DocenteDashboard";
-import EstudianteDashboard from "./dashboards/EstudianteDashboard";
-import TutorDashboard from "./dashboards/TutorDashboard";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
+import DocenteDashboard from "../dashboards/DocenteDashboard";
+import EstudianteDashboard from "../dashboards/EstudianteDashboard";
+import TutorDashboard from "../dashboards/TutorDashboard";
 import {
   Users,
   GraduationCap,

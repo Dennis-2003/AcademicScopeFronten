@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import Landing from './pages/Landing';
-import Login from './pages/Login';
-import CambiarPasswordInicial from './pages/CambiarPasswordInicial';
+import Landing from './pages/landing/Landing';
+import Login from './pages/auth/Login';
+import CambiarPasswordInicial from './pages/auth/CambiarPasswordInicial';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
-import DashboardIndex from './pages/DashboardIndex';
-import ComingSoon from './pages/ComingSoon';
-import NotFound from './pages/NotFound';
-import Perfil from './pages/Perfil';
+import DashboardIndex from './pages/dashboard/DashboardIndex';
+import ComingSoon from './pages/errors/ComingSoon';
+import NotFound from './pages/errors/NotFound';
+import Perfil from './pages/perfil/Perfil';
 
 // Vistas del Docente
 import MisCursos from './pages/docente/MisCursos';

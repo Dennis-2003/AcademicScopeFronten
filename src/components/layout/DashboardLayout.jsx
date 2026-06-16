@@ -280,7 +280,7 @@ export default function DashboardLayout() {
           >
             <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold flex-shrink-0">
               {user.avatarUrl ? (
-                <img src={`http://localhost:8080/api/usuarios/avatar/${user.avatarUrl}`} alt="avatar" className="w-full h-full rounded-full object-cover border-2 border-indigo-200" />
+                <img src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:8080/api/usuarios/avatar/${user.avatarUrl}`} alt="avatar" className="w-full h-full rounded-full object-cover border-2 border-indigo-200" />
               ) : (
                 userInitials
               )}

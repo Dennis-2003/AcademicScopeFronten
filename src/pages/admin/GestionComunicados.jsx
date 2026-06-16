@@ -263,7 +263,7 @@ export default function GestionComunicados() {
                       
                       {c.archivoUrl && (
                         <div className="mb-3">
-                          <a href={`http://localhost:8080/api/comunicados/download/${c.archivoUrl}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-colors shadow-sm">
+                          <a href={c.archivoUrl.startsWith('http') ? c.archivoUrl : `http://localhost:8080/api/comunicados/download/${c.archivoUrl}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-colors shadow-sm">
                             <FileText size={12} className="text-indigo-500" />
                             {c.archivoNombre}
                             <Download size={12} className="ml-1 opacity-50" />
