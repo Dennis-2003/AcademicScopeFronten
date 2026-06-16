@@ -181,7 +181,7 @@ export default function Recursos() {
                 
                 <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-400">{formatearFecha(rec.fechaSubida)}</span>
-                  <a href={rec.url} target="_blank" rel="noopener noreferrer" onClick={() => console.log('URL del recurso:', rec.url)} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors">
+                  <a href={rec.tipo === 'PDF' ? rec.url.replace('/image/upload/', '/raw/upload/') : rec.url} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors">
                     <Download size={14} />
                   </a>
                 </div>
