@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Upload, FileText, Image as ImageIcon, Video, Link as LinkIcon, Download, Trash2, Loader2, Search } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, Video, Link as LinkIcon, Download, Trash2, Loader2, Search, Eye, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { obtenerCursosPorDocente } from '../../services/cursoService';
 import { obtenerRecursosPorCurso, crearRecurso, eliminarRecurso } from '../../services/recursoService';
@@ -13,6 +13,8 @@ export default function Recursos() {
   const [cursoFiltro, setCursoFiltro] = useState('');
   const [recursos, setRecursos] = useState([]);
   const [cargando, setCargando] = useState(false);
+
+
   
   const [mostrandoModal, setMostrandoModal] = useState(false);
   const [nuevoTitulo, setNuevoTitulo] = useState('');
@@ -21,6 +23,18 @@ export default function Recursos() {
   const [nuevoArchivo, setNuevoArchivo] = useState(null);
   const [subiendo, setSubiendo] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [previewTarget, setPreviewTarget] = useState(null);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState(null);
+
+  useEffect(() => {
+    if (nuevoArchivo && typeof nuevoArchivo !== 'string') {
+      const url = URL.createObjectURL(nuevoArchivo);
+      setLocalPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setLocalPreviewUrl(null);
+    }
+  }, [nuevoArchivo]);
 
   useEffect(() => {
     if (user?.id) cargarDatos();
@@ -181,9 +195,18 @@ export default function Recursos() {
                 
                 <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-400">{formatearFecha(rec.fechaSubida)}</span>
-                  <a href={rec.tipo === 'PDF' ? rec.url.replace('/image/upload/', '/raw/upload/') : rec.url} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors">
-                    <Download size={14} />
-                  </a>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setPreviewTarget({ url: rec.url, tipo: rec.tipo, titulo: rec.titulo })} 
+                      className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors" 
+                      title="Visualizar"
+                    >
+                      <Eye size={14} />
+                    </button>
+                    <a href={rec.url} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors" title="Descargar">
+                      <Download size={14} />
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
@@ -250,18 +273,37 @@ export default function Recursos() {
               {nuevoTipo !== 'LINK' ? (
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Archivo</label>
-                  <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all">
-                    <Upload size={18} className="text-slate-400" />
-                    <span className="text-sm font-medium text-slate-500 flex-1 truncate">
-                      {nuevoArchivo ? nuevoArchivo.name : 'Seleccionar archivo...'}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Subir</span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={e => setNuevoArchivo(e.target.files?.[0] || null)}
-                    />
-                  </label>
+                  {!nuevoArchivo ? (
+                    <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all">
+                      <Upload size={18} className="text-slate-400" />
+                      <span className="text-sm font-medium text-slate-500 flex-1 truncate">
+                        Seleccionar archivo...
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Subir</span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={e => setNuevoArchivo(e.target.files?.[0] || null)}
+                      />
+                    </label>
+                  ) : (
+                    <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden bg-slate-50 flex justify-center items-center h-48 relative group">
+                      {localPreviewUrl && nuevoTipo === 'IMAGEN' && <img src={localPreviewUrl} className="max-w-full max-h-full object-contain" alt="Vista previa" />}
+                      {localPreviewUrl && nuevoTipo === 'VIDEO' && <video src={localPreviewUrl} controls className="max-w-full max-h-full" />}
+                      {localPreviewUrl && nuevoTipo === 'PDF' && <iframe src={localPreviewUrl} className="w-full h-full border-0" title="Vista previa PDF" />}
+                      
+                      <button 
+                        onClick={() => setNuevoArchivo(null)} 
+                        className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-red-500 hover:text-white text-slate-700 rounded-lg shadow-sm backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                        title="Quitar archivo"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/60 to-transparent p-2 pointer-events-none">
+                        <p className="text-white text-xs font-medium truncate">{nuevoArchivo.name}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div>
@@ -294,6 +336,53 @@ export default function Recursos() {
                   {subiendo ? 'Subiendo...' : 'Guardar'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL VISUALIZAR RECURSO */}
+      {previewTarget && createPortal(
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[9999] p-4 flex justify-center items-center">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in">
+            <div className="flex justify-between items-center p-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                {getIconForType(previewTarget.tipo)}
+                {previewTarget.titulo}
+              </h3>
+              <div className="flex items-center gap-2">
+                <a 
+                  href={previewTarget.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-sm font-medium flex items-center gap-2"
+                >
+                  <Download size={14} /> Descargar
+                </a>
+                <button onClick={() => setPreviewTarget(null)} className="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50">
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="p-0 sm:p-4 flex-1 overflow-hidden bg-slate-100 flex justify-center items-center min-h-[50vh]">
+              {previewTarget.tipo === 'IMAGEN' && <img src={previewTarget.url} alt={previewTarget.titulo} className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-sm" />}
+              {previewTarget.tipo === 'VIDEO' && <video src={previewTarget.url} controls className="max-w-full max-h-[75vh] rounded-lg shadow-sm w-full" />}
+              {previewTarget.tipo === 'PDF' && <iframe src={previewTarget.url} className="w-full h-[75vh] rounded-lg border-0 shadow-sm bg-white" title={previewTarget.titulo} />}
+              {previewTarget.tipo === 'LINK' && (
+                <div className="text-center space-y-4 bg-white p-8 rounded-2xl shadow-sm">
+                  <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+                    <LinkIcon size={32} className="text-amber-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-lg">Enlace Externo</h4>
+                    <p className="text-slate-500 text-sm mt-1 max-w-sm">Este recurso apunta a una página externa. Haz clic en el botón para visitarla.</p>
+                  </div>
+                  <a href={previewTarget.url} target="_blank" rel="noopener noreferrer" className="inline-block px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200">
+                    Abrir Página
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>,

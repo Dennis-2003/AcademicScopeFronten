@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Clock, CheckCircle2, FileText, MoreVertical, Loader2, X, Search, Users, ExternalLink, Save } from 'lucide-react';
+import { Plus, Clock, CheckCircle2, FileText, Loader2, X, Search, Users, ExternalLink, Save, Edit2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { obtenerCursosPorDocente } from '../../services/cursoService';
-import { obtenerAsignacionesPorCurso, crearAsignacion } from '../../services/asignacionService';
+import { obtenerAsignacionesPorCurso, crearAsignacion, actualizarAsignacion, eliminarAsignacion } from '../../services/asignacionService';
 import api from '../../services/api';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 export default function Asignaciones() {
   const { user } = useAuth();
@@ -16,10 +17,13 @@ export default function Asignaciones() {
   // Modal de revisión de entregas
   const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
 
-  // Estados para nueva asignacion (Tarea)
+  // Estados para nueva/editar asignacion (Tarea)
+  const [editandoId, setEditandoId] = useState(null);
   const [nuevoTitulo, setNuevoTitulo] = useState('');
+  const [nuevaDescripcion, setNuevaDescripcion] = useState('');
   const [nuevoCursoId, setNuevoCursoId] = useState('');
   const [nuevaFecha, setNuevaFecha] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -51,25 +55,69 @@ export default function Asignaciones() {
   };
 
   const handleCrear = async () => {
-    if(!nuevoTitulo || !nuevoCursoId || !nuevaFecha) return alert('Completa todos los campos');
+    if(!nuevoTitulo || !nuevoCursoId || !nuevaFecha) return alert('Completa todos los campos obligatorios');
     
     try {
       const payload = {
         curso: { id: parseInt(nuevoCursoId) },
         titulo: nuevoTitulo,
-        descripcion: '',
+        descripcion: nuevaDescripcion,
         fechaVencimiento: new Date(nuevaFecha).toISOString(),
         estado: 'ACTIVA'
       };
-      await crearAsignacion(payload);
-      setMostrandoModal(false);
-      setNuevoTitulo('');
-      setNuevaFecha('');
+      
+      if (editandoId) {
+        await actualizarAsignacion(editandoId, payload);
+      } else {
+        await crearAsignacion(payload);
+      }
+      
+      cerrarModal();
       cargarDatos(); 
     } catch (err) {
-      console.error("Error al crear", err);
-      alert("No se pudo crear la tarea");
+      console.error("Error al guardar", err);
+      alert("No se pudo guardar la tarea");
     }
+  };
+
+  const handleEditar = (e, asig) => {
+    e.stopPropagation();
+    setEditandoId(asig.id);
+    setNuevoTitulo(asig.titulo);
+    setNuevaDescripcion(asig.descripcion || '');
+    setNuevoCursoId(asig.cursoId || (cursos.find(c => c.nombre === asig.nombreCurso)?.id) || '');
+    
+    // Formatear fecha para datetime-local
+    if (asig.fechaVencimiento) {
+      const date = new Date(asig.fechaVencimiento);
+      // Ajuste local para el input datetime-local
+      const tzoffset = (new Date()).getTimezoneOffset() * 60000; 
+      const localISOTime = (new Date(date - tzoffset)).toISOString().slice(0, 16);
+      setNuevaFecha(localISOTime);
+    }
+    
+    setMostrandoModal(true);
+  };
+
+  const confirmarEliminar = async () => {
+    if (!deleteTarget) return;
+    try {
+      await eliminarAsignacion(deleteTarget);
+      await cargarDatos();
+    } catch (err) {
+      console.error("Error eliminando", err);
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  const cerrarModal = () => {
+    setMostrandoModal(false);
+    setEditandoId(null);
+    setNuevoTitulo('');
+    setNuevaDescripcion('');
+    setNuevaFecha('');
+    setNuevoCursoId('');
   };
 
   const formatFecha = (isoString) => {
@@ -85,7 +133,7 @@ export default function Asignaciones() {
           <p className="text-slate-500 text-sm mt-1">Crea tareas, actividades y revisa las entregas de tus alumnos.</p>
         </div>
         <button 
-          onClick={() => setMostrandoModal(true)}
+          onClick={() => { cerrarModal(); setMostrandoModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium text-sm shadow-sm shadow-indigo-200"
         >
           <Plus size={18} />
@@ -113,9 +161,22 @@ export default function Asignaciones() {
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${asig.estado === 'ACTIVA' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'}`}>
                   <FileText size={20} />
                 </div>
-                <button className="text-slate-400 hover:text-slate-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <MoreVertical size={18} />
-                </button>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={(e) => handleEditar(e, asig)}
+                    className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors"
+                    title="Editar Tarea"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(asig.id); }}
+                    className="text-slate-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                    title="Eliminar Tarea"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
               <h3 className="font-bold text-slate-800 mb-1 truncate" title={asig.titulo}>{asig.titulo}</h3>
               <p className="text-xs font-medium text-slate-500 mb-4 truncate">{asig.nombreCurso} - {asig.gradoCurso}</p>
@@ -141,7 +202,7 @@ export default function Asignaciones() {
       {mostrandoModal && createPortal(
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] p-4 flex justify-center items-center overflow-y-auto">
           <div className="bg-white rounded-3xl p-6 w-[90vw] md:w-[480px] shrink-0 shadow-xl animate-fade-in">
-            <h2 className="text-xl font-bold text-slate-800 mb-6">Crear Nueva Tarea</h2>
+            <h2 className="text-xl font-bold text-slate-800 mb-6">{editandoId ? 'Editar Tarea' : 'Crear Nueva Tarea'}</h2>
               
               <div className="space-y-4">
                 <div>
@@ -160,10 +221,20 @@ export default function Asignaciones() {
                   <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Título de la Tarea</label>
                   <input 
                     type="text" 
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
                     value={nuevoTitulo}
                     onChange={e => setNuevoTitulo(e.target.value)}
                     placeholder="Ej. Ejercicios de Álgebra"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Descripción / Instrucciones (Opcional)</label>
+                  <textarea 
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[100px] outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                    value={nuevaDescripcion}
+                    onChange={e => setNuevaDescripcion(e.target.value)}
+                    placeholder="Escribe las instrucciones de la tarea..."
                   />
                 </div>
 
@@ -179,7 +250,7 @@ export default function Asignaciones() {
 
                 <div className="flex gap-3 pt-4">
                   <button 
-                    onClick={() => setMostrandoModal(false)}
+                    onClick={cerrarModal}
                     className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-colors"
                   >
                     Cancelar
@@ -188,12 +259,25 @@ export default function Asignaciones() {
                     onClick={handleCrear}
                     className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors"
                   >
-                    Guardar Tarea
+                    {editandoId ? 'Guardar Cambios' : 'Guardar Tarea'}
                   </button>
                 </div>
               </div>
             </div>
         </div>,
+        document.body
+      )}
+
+      {/* MODAL CONFIRMAR ELIMINAR */}
+      {deleteTarget && createPortal(
+        <ConfirmModal
+          isOpen={true}
+          title="Eliminar Tarea"
+          message="¿Estás seguro de que quieres eliminar esta tarea? Se perderán todas las entregas de los estudiantes."
+          confirmLabel="Sí, eliminar"
+          onConfirm={confirmarEliminar}
+          onCancel={() => setDeleteTarget(null)}
+        />,
         document.body
       )}
 
@@ -323,7 +407,10 @@ function RevisionEntregasModal({ tarea, onClose }) {
         <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
           <div>
             <h3 className="text-xl font-black text-slate-800">{tarea.titulo}</h3>
-            <p className="text-sm font-medium text-slate-500 mt-1">Revisión de Tareas</p>
+            {tarea.descripcion && (
+              <p className="text-sm text-slate-600 mt-2 bg-slate-50 p-3 rounded-lg border border-slate-100">{tarea.descripcion}</p>
+            )}
+            <p className="text-xs font-bold text-slate-400 mt-2">Revisión de Tareas</p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-full">
             <X size={20} strokeWidth={2.5} />
