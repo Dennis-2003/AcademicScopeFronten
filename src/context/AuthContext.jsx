@@ -14,7 +14,7 @@ export function AuthProvider({ children }) {
 
     if (username.includes('@')) {
       try {
-        const userRes = await api.get(`/usuarios/by-email/${encodeURIComponent(username)}`);
+        const userRes = await api.get(`/usuarios/by-email`, { params: { email: username } });
         dni = userRes.data.dni;
       } catch {
         dni = username;
