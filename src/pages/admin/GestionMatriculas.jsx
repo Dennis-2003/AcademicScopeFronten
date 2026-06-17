@@ -77,8 +77,8 @@ export default function GestionMatriculas({ isEmbedded = false }) {
         seccion: nuevaMatricula.seccion.trim().toUpperCase() || 'A'
       };
       
-      const res = await api.post('/matriculas', payload);
-      setMatriculasGlobales([...matriculasGlobales, res.data]);
+      await api.post('/matriculas', payload);
+      await fetchDatos();
       closeModal();
     } catch (error) {
       console.error("Error al registrar matrícula", error);
