@@ -73,7 +73,7 @@ function WelcomeBanner({ user, fechaStr }) {
 }
 
 function StatCard({ stat, animated }) {
-  const { label, value, trendLabel, color, bg, Icon, prefix } = stat;
+  const { label, value, color, bg, Icon, prefix } = stat;
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -99,12 +99,6 @@ function StatCard({ stat, animated }) {
         </div>
         <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm" style={{ backgroundColor: bg, color }}>
           <Icon size={22} strokeWidth={2.5} />
-        </div>
-      </div>
-      
-      <div className="mt-6 flex items-center gap-2">
-        <div className="px-2.5 py-1 rounded-lg text-xs font-extrabold tracking-wide" style={{ backgroundColor: color, color: '#fff' }}>
-          {trendLabel}
         </div>
       </div>
     </div>
@@ -418,10 +412,10 @@ function AdminDashboard({ user }) {
   }, []);
 
   const STATS = [
-    { id: "students", label: "Total Students", value: stats.estudiantes, trendLabel: "8.72%", color: "#6366f1", bg: "#6366f115", Icon: GraduationCap, prefix: "" },
-    { id: "courses", label: "Active Courses", value: stats.cursos, trendLabel: "7.36%", color: "#10b981", bg: "#10b98115", Icon: BookMarked, prefix: "" },
-    { id: "teachers", label: "Total Teachers", value: stats.docentes, trendLabel: "5.62%", color: "#f43f5e", bg: "#f43f5e15", Icon: UserCheck, prefix: "" },
-    { id: "tutors", label: "Total Tutors", value: stats.tutores, trendLabel: "2.53%", color: "#0ea5e9", bg: "#0ea5e915", Icon: Users, prefix: "" },
+    { id: "students", label: "Total Students", value: stats.estudiantes, color: "#6366f1", bg: "#6366f115", Icon: GraduationCap, prefix: "" },
+    { id: "courses", label: "Active Courses", value: stats.cursos, color: "#10b981", bg: "#10b98115", Icon: BookMarked, prefix: "" },
+    { id: "teachers", label: "Total Teachers", value: stats.docentes, color: "#f43f5e", bg: "#f43f5e15", Icon: UserCheck, prefix: "" },
+    { id: "tutors", label: "Total Tutors", value: stats.tutores, color: "#0ea5e9", bg: "#0ea5e915", Icon: Users, prefix: "" },
   ];
 
   const QUICK_LINKS = [
