@@ -9,7 +9,18 @@ export function AuthProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const login = async (dni, password) => {
+  const login = async (username, password) => {
+    let dni = username;
+
+    if (username.includes('@')) {
+      try {
+        const userRes = await api.get(`/usuarios/by-email/${encodeURIComponent(username)}`);
+        dni = userRes.data.dni;
+      } catch {
+        dni = username;
+      }
+    }
+
     const res = await api.post('/auth/login', { username: dni, password });
     const loggedUser = res.data;
     sessionStorage.setItem('token', loggedUser.token);
