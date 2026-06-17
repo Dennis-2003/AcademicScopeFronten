@@ -90,9 +90,29 @@ export default function GestionEvaluaciones() {
           try {
             const califRes = await api.get(`/calificaciones/estudiante/${est.id}`);
             const califs = califRes.data;
-            const promedio = califs.length > 0
-              ? califs.reduce((sum, c) => sum + c.nota, 0) / califs.length
-              : 0;
+            const porCurso = {};
+            califs.forEach(c => {
+              const cursoId = c.evaluacion?.curso?.id || 'sin-curso';
+              if (!porCurso[cursoId]) porCurso[cursoId] = [];
+              porCurso[cursoId].push(c);
+            });
+            let sumaPromedios = 0;
+            let totalCursos = 0;
+            Object.values(porCurso).forEach(evals => {
+              let sumaPonderada = 0;
+              let sumaPesos = 0;
+              evals.forEach(c => {
+                if (c.nota && c.evaluacion?.ponderacion) {
+                  sumaPonderada += c.nota * (c.evaluacion.ponderacion / 100);
+                  sumaPesos += c.evaluacion.ponderacion;
+                }
+              });
+              if (sumaPesos > 0) {
+                sumaPromedios += sumaPonderada / (sumaPesos / 100);
+                totalCursos++;
+              }
+            });
+            const promedio = totalCursos > 0 ? sumaPromedios / totalCursos : 0;
             return {
               id: est.id,
               nombre: `${est.nombre} ${est.apellido}`,
@@ -207,11 +227,15 @@ export default function GestionEvaluaciones() {
       calificaciones.forEach(c => {
         const cursoNombre = c.evaluacion?.curso?.nombre || 'Curso';
         if (!cursosMap[cursoNombre]) cursosMap[cursoNombre] = [];
-        cursosMap[cursoNombre].push({ nombre: c.evaluacion?.nombre, nota: c.nota });
+        cursosMap[cursoNombre].push({ nombre: c.evaluacion?.nombre, nota: c.nota, ponderacion: c.evaluacion?.ponderacion || 0 });
       });
 
       const cursos = Object.entries(cursosMap).map(([nombre, comps]) => {
-        const promedio = comps.reduce((s, c) => s + c.nota, 0) / comps.length;
+        let sumaPonderada = 0, sumaPesos = 0;
+        comps.forEach(c => {
+          if (c.nota && c.ponderacion) { sumaPonderada += c.nota * (c.ponderacion / 100); sumaPesos += c.ponderacion; }
+        });
+        const promedio = sumaPesos > 0 ? sumaPonderada / (sumaPesos / 100) : 0;
         return { nombre, promedio: Math.round(promedio * 10) / 10, competencias: comps };
       });
 
@@ -247,24 +271,33 @@ export default function GestionEvaluaciones() {
           periodo: periodoNombre,
           cursos: allDetalles.flatMap(d => {
             const cursosMap = {};
-            d.calificaciones.forEach(c => {
-              const cn = c.evaluacion?.curso?.nombre || 'Curso';
-              if (!cursosMap[cn]) cursosMap[cn] = [];
-              cursosMap[cn].push(c.nota);
-            });
-            return Object.entries(cursosMap).map(([nombre, notas]) => ({
-              nombre,
-              promedio: Math.round((notas.reduce((s, n) => s + n, 0) / notas.length) * 10) / 10,
-              competencias: d.calificaciones.filter(c => (c.evaluacion?.curso?.nombre || 'Curso') === nombre).map(c => ({
-                nombre: c.evaluacion?.nombre || 'Evaluacion',
-                nota: c.nota
-              }))
+              d.calificaciones.forEach(c => {
+                const cn = c.evaluacion?.curso?.nombre || 'Curso';
+                if (!cursosMap[cn]) cursosMap[cn] = [];
+                cursosMap[cn].push({ nota: c.nota, ponderacion: c.evaluacion?.ponderacion || 0 });
+              });
+              return Object.entries(cursosMap).map(([nombre, notas]) => {
+                let sumaPonderada = 0, sumaPesos = 0;
+                notas.forEach(n => { if (n.nota && n.ponderacion) { sumaPonderada += n.nota * (n.ponderacion / 100); sumaPesos += n.ponderacion; } });
+                const promedio = sumaPesos > 0 ? sumaPonderada / (sumaPesos / 100) : 0;
+                return {
+                  nombre,
+                  promedio: Math.round(promedio * 10) / 10,
+                  competencias: d.calificaciones.filter(c => (c.evaluacion?.curso?.nombre || 'Curso') === nombre).map(c => ({
+                    nombre: c.evaluacion?.nombre || 'Evaluacion',
+                    nota: c.nota,
+                    ponderacion: c.evaluacion?.ponderacion || 0
+                  }))
+                };
+              })
             }));
           }).reduce((acc, curso) => {
             const existente = acc.find(c => c.nombre === curso.nombre);
             if (existente) {
               existente.competencias.push(...curso.competencias);
-              existente.promedio = Math.round((existente.competencias.reduce((s, c) => s + c.nota, 0) / existente.competencias.length) * 10) / 10;
+              let sumaP = 0, sumaPe = 0;
+              existente.competencias.forEach(c => { if (c.nota && c.ponderacion) { sumaP += c.nota * (c.ponderacion / 100); sumaPe += c.ponderacion; } });
+              existente.promedio = sumaPe > 0 ? Math.round((sumaP / (sumaPe / 100)) * 10) / 10 : 0;
             } else acc.push(curso);
             return acc;
           }, [])
@@ -279,13 +312,14 @@ export default function GestionEvaluaciones() {
         calificaciones.forEach(c => {
           const cn = c.evaluacion?.curso?.nombre || 'Curso';
           if (!cursosMap[cn]) cursosMap[cn] = [];
-          cursosMap[cn].push({ nombre: c.evaluacion?.nombre, nota: c.nota });
+          cursosMap[cn].push({ nombre: c.evaluacion?.nombre, nota: c.nota, ponderacion: c.evaluacion?.ponderacion || 0 });
         });
-        const cursos = Object.entries(cursosMap).map(([nombre, comps]) => ({
-          nombre,
-          promedio: Math.round((comps.reduce((s, c) => s + c.nota, 0) / comps.length) * 10) / 10,
-          competencias: comps
-        }));
+        const cursos = Object.entries(cursosMap).map(([nombre, comps]) => {
+          let sumaPonderada = 0, sumaPesos = 0;
+          comps.forEach(c => { if (c.nota && c.ponderacion) { sumaPonderada += c.nota * (c.ponderacion / 100); sumaPesos += c.ponderacion; } });
+          const promedio = sumaPesos > 0 ? sumaPonderada / (sumaPesos / 100) : 0;
+          return { nombre, promedio: Math.round(promedio * 10) / 10, competencias: comps };
+        });
         generarPDFoficial({ nombre: estudianteNombre, grado: '', periodo: periodoNombre, cursos });
       }
     } catch (err) {
