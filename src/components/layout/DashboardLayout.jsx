@@ -38,6 +38,7 @@ const NAV_CONFIG = {
       category: 'Académico',
       items: [
         { to: '/dashboard/admin/cursos', label: 'Gestión Académica', icon: BookOpen },
+        { to: '/dashboard/admin/horarios', label: 'Horarios', icon: CalendarDays },
         { to: '/dashboard/admin/evaluaciones', label: 'Desempeño y Asistencia', icon: GraduationCap },
         { to: '/dashboard/admin/conducta', label: 'Conducta', icon: AlertCircle },
       ]

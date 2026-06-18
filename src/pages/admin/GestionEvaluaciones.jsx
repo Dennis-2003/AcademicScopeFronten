@@ -290,8 +290,8 @@ export default function GestionEvaluaciones() {
                   }))
                 };
               })
-            }));
-          }).reduce((acc, curso) => {
+            })
+          .reduce((acc, curso) => {
             const existente = acc.find(c => c.nombre === curso.nombre);
             if (existente) {
               existente.competencias.push(...curso.competencias);

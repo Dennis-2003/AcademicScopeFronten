@@ -267,7 +267,7 @@ export default function GestionHorarios({ isEmbedded = false }) {
         <header className="mb-8 md:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-3">
-              <Calendar size={14} strokeWidth={2.5} />
+              <CalendarIcon size={14} strokeWidth={2.5} />
               Academia / Horarios
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
