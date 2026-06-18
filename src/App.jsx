@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthProvider';
 import Landing from './pages/landing/Landing';
 import Login from './pages/auth/Login';
 import CambiarPasswordInicial from './pages/auth/CambiarPasswordInicial';
