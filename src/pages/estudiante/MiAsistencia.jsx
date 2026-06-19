@@ -20,7 +20,7 @@ export default function MiAsistencia() {
 
       let cursosDelEstudiante = [];
       if (matriculasValidas.length > 0) {
-        const gradoId = matriculasValidas[0].grado.id;
+        const gradoId = matriculasValidas[0].curso.grado.id;
         const cursosRes = await api.get(`/cursos/grado/${gradoId}`);
         cursosDelEstudiante = cursosRes.data;
       }

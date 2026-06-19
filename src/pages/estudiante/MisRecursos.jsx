@@ -17,7 +17,7 @@ export default function MisRecursos() {
         .then(async res => {
           const matriculasValidas = res.data.filter(m => m.estado !== 'RETIRADA');
           if (matriculasValidas.length > 0) {
-            const gradoId = matriculasValidas[0].grado.id;
+            const gradoId = matriculasValidas[0].curso.grado.id;
             const cursosRes = await api.get(`/cursos/grado/${gradoId}`);
             setCursos(cursosRes.data);
             if (cursosRes.data.length > 0) setCursoSeleccionado(cursosRes.data[0]);
