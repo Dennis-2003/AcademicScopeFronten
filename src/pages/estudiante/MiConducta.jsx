@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, AlertTriangle, ShieldAlert, BadgeInfo } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';

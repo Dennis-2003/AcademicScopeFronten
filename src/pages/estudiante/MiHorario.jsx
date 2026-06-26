@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, MapPin, Loader2, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';

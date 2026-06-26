@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Clock, CheckCircle2, FileText, Loader2, X, Search, Users, ExternalLink, Save, Edit2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
