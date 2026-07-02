@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -209,11 +209,15 @@ function NavGroup({ group, isActiveItem, onClickItem }) {
 
 export default function DashboardLayout() {
   const { user, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [cmdOpen, setCmdOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Resetear sidebar al cambiar de ruta
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   if (!user) return null;
 
@@ -223,8 +227,6 @@ export default function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-[#f4f6f8] font-sans flex">
-      
-      <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} user={user} />
       
       {/* ==============================
           MOBILE OVERLAY & SIDEBAR
@@ -321,34 +323,8 @@ export default function DashboardLayout() {
           </button>
         </header>
 
-        {/* DESKTOP TOP BAR (Command Palette Trigger) - SOLO EN DASHBOARD */}
+        {/* NOTIFICACIONES FLOTANTES GLOBALES (Solo en el Panel Principal) */}
         {location.pathname === '/dashboard' && (
-          <div className="hidden lg:flex items-center justify-between h-[80px] px-8 bg-transparent shrink-0">
-            <div className="flex-1 max-w-2xl ml-8">
-              {user?.rol === 'ADMIN' && (
-                <button 
-                  onClick={() => setCmdOpen(true)}
-                  className="flex items-center justify-between w-full max-w-[400px] bg-slate-100/80 hover:bg-slate-200/80 border border-transparent hover:border-slate-300 text-slate-500 px-4 py-2.5 rounded-xl transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    <Search size={18} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
-                    <span className="text-sm font-medium">Comandos y búsqueda rápida...</span>
-                  </div>
-                  <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 rounded-md shadow-sm">
-                    <span>Ctrl</span>
-                    <span>K</span>
-                  </div>
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              <NotificationsDropdown />
-            </div>
-          </div>
-        )}
-        
-        {/* NOTIFICACIONES FLOTANTES PARA OTRAS PÁGINAS */}
-        {location.pathname !== '/dashboard' && (
           <div className="hidden lg:flex absolute top-6 right-8 z-50">
             <div className="bg-white/80 backdrop-blur-md rounded-full shadow-sm border border-slate-200/50">
               <NotificationsDropdown />

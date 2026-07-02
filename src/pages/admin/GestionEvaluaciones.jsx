@@ -5,7 +5,7 @@ import {
   Calendar, Plus, Search, Edit2, Trash2, AlertCircle, 
   CheckCircle2, XCircle, Clock, PlayCircle, StopCircle, RefreshCcw, X,
   FileText, Printer, FileDown, BookOpen, GraduationCap
-} from 'lucide-react';
+, Users} from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import ReportesAsistencia from './ReportesAsistencia';
@@ -587,243 +587,280 @@ export default function GestionEvaluaciones() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto animate-fade-in pb-12 font-sans">
-      <header className="mb-8 flex flex-col gap-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-3">
-              <Calendar size={14} strokeWidth={2.5} />
-              Centro de Evaluaciones
-            </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
-              Evaluaciones y Libretas
+    <div className="w-full min-h-[calc(100vh-80px)] flex flex-col pb-8 font-sans">
+      {/* GLOBAL HERO HEADER - COMPACTO */}
+      <div className="relative mb-6 bg-slate-900 rounded-[2rem] p-8 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-slate-800 shrink-0 w-full">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0f172a] to-[#1e1b4b]"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-[50px]"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-500/10 rounded-full blur-[50px]"></div>
+        
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-amber-400 border border-slate-700/60 shadow-inner">
+                <Calendar size={24} strokeWidth={2.5} />
+              </div>
+              <div>
+                Evaluaciones y <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">Libretas</span>
+              </div>
             </h1>
-            <p className="text-slate-500 font-medium mt-2 text-sm md:text-base">
+            <p className="text-slate-400 font-medium mt-2 text-sm ml-16">
               Gestiona el cronograma académico y descarga las libretas de notas.
             </p>
           </div>
         </div>
-
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="flex border-b border-slate-200 mb-6">
-            <button
-              onClick={() => setActiveTab('cronograma')}
-              className={`px-6 py-3.5 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
-                activeTab === 'cronograma'
-                  ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <Calendar size={16} />
-              Cronograma de Periodos
-            </button>
-            <button
-              onClick={() => setActiveTab('libretas')}
-              className={`px-6 py-3.5 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
-                activeTab === 'libretas'
-                  ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <FileText size={16} />
-              Consolidado y Libretas
-            </button>
-            <button
-              onClick={() => setActiveTab('asistencia')}
-              className={`px-6 py-3.5 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
-                activeTab === 'asistencia'
-                  ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <CheckCircle2 size={16} />
-              Reportes de Asistencia
-            </button>
-          </div>
-          
-          {activeTab === 'cronograma' && (
-            <button 
-              onClick={openNewModal}
-              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-[15px] bg-indigo-600 text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/20 active:translate-y-0"
-            >
-              <Plus size={20} strokeWidth={2.5} />
-              NUEVO PERIODO
-            </button>
-          )}
-
-          {activeTab === 'libretas' && (
-            <button 
-              onClick={() => handleDescargarLibreta()}
-              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-[15px] bg-indigo-600 text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/20 active:translate-y-0"
-            >
-              <Printer size={20} strokeWidth={2.5} />
-              IMPRIMIR AULA
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* CONTENIDO TAB 1: CRONOGRAMA */}
-      {activeTab === 'cronograma' && (
-        <div className="animate-slide-up">
-          <div className="bg-white rounded-2xl p-2 border border-slate-200/70 shadow-sm mb-6 flex items-center justify-between gap-4">
-            <div className="relative w-full md:w-96">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Buscar periodo..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200/60 focus:bg-white focus:border-indigo-500 outline-none text-sm font-medium"
-              />
-            </div>
-          </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-          <h2 className="text-[15px] font-bold text-slate-700">Cronograma de Evaluaciones</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Periodo</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Fecha Inicio</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Fecha Fin</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Estado</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredEvaluaciones.map(ev => (
-                <tr key={ev.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4 font-bold text-slate-800 text-[15px]">{ev.nombre}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-slate-600">{ev.fechaInicio}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-slate-600">{ev.fechaFin}</td>
-                  <td className="px-6 py-4">{getStatusBadge(ev.estado)}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-1 md:gap-2">
-                      {ev.estado === 'PROGRAMADO' && (
-                        <button onClick={() => handleAbrirPeriodo(ev.id)} className="px-3 py-1.5 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm" title="Iniciar Periodo">
-                          <PlayCircle size={14} /> Iniciar
-                        </button>
-                      )}
-                      {ev.estado === 'ACTIVO' && (
-                        <button onClick={() => handleCerrarPeriodo(ev.id)} className="px-3 py-1.5 text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm" title="Cerrar Periodo">
-                          <StopCircle size={14} /> Cerrar
-                        </button>
-                      )}
-                      {ev.estado === 'CERRADO' && (
-                        <button onClick={() => handleReabrirPeriodo(ev.id)} className="p-2 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors flex items-center gap-1" title="Reabrir Excepcionalmente">
-                          <RefreshCcw size={16} />
-                        </button>
-                      )}
-                      
-                      <div className="w-px h-6 bg-slate-200 mx-1"></div>
-                      
-                      <button onClick={() => openEditModal(ev)} className="p-2 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors" title="Editar Periodo">
-                        <Edit2 size={16} />
-                      </button>
-                      <button 
-                        onClick={() => deleteEvaluacion(ev.id)} 
-                        className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors" 
-                        disabled={ev.estado !== 'PROGRAMADO'}
-                        title={ev.estado !== 'PROGRAMADO' ? "Solo puedes eliminar periodos programados" : "Eliminar Periodo"}
-                      >
-                        <Trash2 size={16} className={ev.estado !== 'PROGRAMADO' ? 'opacity-30' : ''} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            </table>
-          </div>
-        </div>
       </div>
-      )}
 
-      {/* CONTENIDO TAB 2: LIBRETAS */}
-      {activeTab === 'libretas' && (
-        <div className="animate-slide-up">
-          <div className="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm mb-6 flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-[11px] font-extrabold text-slate-500 mb-1.5 uppercase tracking-widest">Seleccionar Periodo</label>
-              <select 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer"
-                value={filtroPeriodo}
-                onChange={e => setFiltroPeriodo(e.target.value)}
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
-              >
-                {evaluaciones.map(ev => <option key={ev.id} value={ev.id}>{ev.nombre} ({ev.estado})</option>)}
-              </select>
-            </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-[11px] font-extrabold text-slate-500 mb-1.5 uppercase tracking-widest">Seleccionar Grado y Aula</label>
-              <select 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer"
-                value={filtroGrado}
-                onChange={e => setFiltroGrado(e.target.value)}
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
-              >
-                <option value="">Seleccione un grado</option>
-                {grados.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
-              </select>
-            </div>
-          </div>
+      {/* ENTERPRISE TABLE VIEW */}
+      <div className="flex-1 bg-white rounded-[2rem] border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col min-h-0 w-full mb-8">
+        
+        {/* TABS HEADER */}
+        <div className="flex items-center px-8 border-b border-slate-100 shrink-0 overflow-x-auto hide-scrollbar">
+          <button
+            onClick={() => setActiveTab('cronograma')}
+            className={`px-6 py-5 text-sm font-black tracking-wide border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'cronograma' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+          >
+            <Calendar size={16} strokeWidth={2.5} />
+            CRONOGRAMA
+          </button>
+          <button
+            onClick={() => setActiveTab('libretas')}
+            className={`px-6 py-5 text-sm font-black tracking-wide border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'libretas' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+          >
+            <FileText size={16} strokeWidth={2.5} />
+            CONSOLIDADO Y LIBRETAS
+          </button>
+          <button
+            onClick={() => setActiveTab('asistencia')}
+            className={`px-6 py-5 text-sm font-black tracking-wide border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'asistencia' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+          >
+            <CheckCircle2 size={16} strokeWidth={2.5} />
+            ASISTENCIA
+          </button>
+        </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <h2 className="text-[15px] font-bold text-slate-700">Rendimiento y Libretas Oficiales</h2>
-              <span className="text-xs font-bold text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full shadow-sm">{cargandoEstudiantes ? 'Cargando...' : estudiantes.length + ' Estudiantes encontrados'}</span>
+        {/* CONTENIDO TAB 1: CRONOGRAMA */}
+        {activeTab === 'cronograma' && (
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* TOOLBAR & FILTERS */}
+            <div className="p-6 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-4 shrink-0 border-b border-slate-100">
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Buscar periodo..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 outline-none transition-all shadow-sm"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <button 
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-amber-400 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md shadow-slate-900/20 active:scale-95 whitespace-nowrap w-full md:w-auto justify-center"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                Nuevo Periodo
+              </button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Estudiante</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Asistencia</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Promedio Final</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Estado</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Acciones de Libreta</th>
+
+            {/* DATA TABLE */}
+            <div className="flex-1 overflow-auto bg-white [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+              <table className="w-full text-left border-collapse min-w-[800px]">
+                <thead className="bg-white sticky top-0 z-10 shadow-sm">
+                  <tr>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Periodo</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Fecha Inicio</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Fecha Fin</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Estado</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {cargandoEstudiantes ? (
-                    <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-500 font-bold">Cargando estudiantes...</td></tr>
-                  ) : estudiantes.length === 0 ? (
-                    <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-500 font-bold">Seleccione un grado para ver los estudiantes</td></tr>
-                  ) : estudiantes.map(est => (
-                    <tr key={est.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4 font-bold text-slate-800 text-[14px] flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">{est.nombre.charAt(0)}</div>
-                        {est.nombre}
+                <tbody className="divide-y divide-slate-100/80">
+                  {filteredEvaluaciones.map(ev => (
+                    <tr key={ev.id} className="group hover:bg-slate-50/80 transition-colors">
+                      <td className="py-4 px-8">
+                        <span className="font-bold text-slate-800 text-[15px] group-hover:text-amber-600 transition-colors">{ev.nombre}</span>
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-600">-</td>
-                      <td className="px-6 py-4 font-bold text-[15px]">
-                        <span className={est.promedio >= 11 ? 'text-emerald-600' : 'text-red-600'}>{est.promedio.toFixed(1)}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 w-max ${est.estado === 'Aprobado' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
-                          {est.estado === 'Aprobado' ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
-                          {est.estado}
+                      <td className="py-4 px-8">
+                        <span className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                          <Calendar size={14} className="text-slate-400" />
+                          {ev.fechaInicio}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="py-4 px-8">
+                        <span className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                          <Calendar size={14} className="text-slate-400" />
+                          {ev.fechaFin}
+                        </span>
+                      </td>
+                      <td className="py-4 px-8">
+                        {getStatusBadge(ev.estado)}
+                      </td>
+                      <td className="py-4 px-8">
+                        <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          {ev.estado === 'PROGRAMADO' && (
+                            <button onClick={() => handleAbrirPeriodo(ev.id)} className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100" title="Iniciar Periodo">
+                              <PlayCircle size={14} strokeWidth={2.5} />
+                              Iniciar
+                            </button>
+                          )}
+                          {ev.estado === 'ACTIVO' && (
+                            <button onClick={() => handleCerrarPeriodo(ev.id)} className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100" title="Cerrar Periodo">
+                              <StopCircle size={14} strokeWidth={2.5} />
+                              Cerrar
+                            </button>
+                          )}
+                          {ev.estado === 'CERRADO' && (
+                            <button onClick={() => handleReabrirPeriodo(ev.id)} className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-100" title="Reabrir Excepcionalmente">
+                              <RefreshCcw size={14} strokeWidth={2.5} />
+                              Reabrir
+                            </button>
+                          )}
+                          
+                          <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
+                          
+                          <button onClick={() => { setEvaluacionAEditar(ev); setForm({nombre: ev.nombre, fechaInicio: ev.fechaInicio, fechaFin: ev.fechaFin, estado: ev.estado}); setShowModal(true); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Editar Periodo">
+                            <Edit2 size={16} strokeWidth={2.5} />
+                          </button>
                           <button 
-                            onClick={() => fetchDetallesEstudiante(est.estudianteId)}
-                            className="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm" 
-                            title="Ver Detalle de Notas"
+                            onClick={() => deleteEvaluacion(ev.id)} 
+                            className={`p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors ${ev.estado !== 'PROGRAMADO' ? 'opacity-30 cursor-not-allowed' : ''}`} 
+                            disabled={ev.estado !== 'PROGRAMADO'}
+                            title={ev.estado !== 'PROGRAMADO' ? "Solo puedes eliminar periodos programados" : "Eliminar Periodo"}
                           >
-                            <BookOpen size={14} /> Detalle
+                            <Trash2 size={16} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  
+                  {filteredEvaluaciones.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="py-16 text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 border border-slate-100 mb-4">
+                          <Calendar className="text-slate-300" size={28} />
+                        </div>
+                        <h3 className="text-lg font-black text-slate-800 mb-1">No se encontraron periodos</h3>
+                        <p className="text-sm text-slate-500 font-medium">Prueba ajustando los filtros de búsqueda o agrega uno nuevo.</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* CONTENIDO TAB 2: LIBRETAS */}
+        {activeTab === 'libretas' && (
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="p-6 bg-slate-50/50 flex flex-col lg:flex-row items-center justify-between gap-4 shrink-0 border-b border-slate-100">
+              <div className="flex flex-col md:flex-row gap-4 w-full lg:w-auto">
+                <div className="relative min-w-[220px]">
+                  <select 
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 transition-all appearance-none cursor-pointer shadow-sm"
+                    value={filtroPeriodo}
+                    onChange={e => setFiltroPeriodo(e.target.value)}
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
+                  >
+                    <option value="">Selecciona un periodo...</option>
+                    {evaluaciones.map(ev => <option key={ev.id} value={ev.id}>{ev.nombre} ({ev.estado})</option>)}
+                  </select>
+                </div>
+                <div className="relative min-w-[220px]">
+                  <select 
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 transition-all appearance-none cursor-pointer shadow-sm"
+                    value={filtroGrado}
+                    onChange={e => setFiltroGrado(e.target.value)}
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
+                  >
+                    <option value="">Selecciona un grado...</option>
+                    {grados.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+                  </select>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => handleDescargarLibreta()}
+                className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-amber-400 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md shadow-slate-900/20 active:scale-95 whitespace-nowrap w-full lg:w-auto justify-center"
+              >
+                <Printer size={18} strokeWidth={2.5} />
+                Imprimir Aula
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto bg-white [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+              <table className="w-full text-left border-collapse min-w-[800px]">
+                <thead className="bg-white sticky top-0 z-10 shadow-sm">
+                  <tr>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Estudiante</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Asistencia</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Promedio Final</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Estado</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100/80">
+                  {cargandoEstudiantes ? (
+                    <tr>
+                      <td colSpan="5" className="py-16 text-center">
+                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 border border-slate-100 mb-4">
+                           <Calendar className="text-slate-300 animate-pulse" size={28} />
+                         </div>
+                         <h3 className="text-lg font-black text-slate-800 mb-1">Cargando estudiantes...</h3>
+                      </td>
+                    </tr>
+                  ) : estudiantes.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="py-16 text-center">
+                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 border border-slate-100 mb-4">
+                           <Users className="text-slate-300" size={28} />
+                         </div>
+                         <h3 className="text-lg font-black text-slate-800 mb-1">Ningún estudiante seleccionado</h3>
+                         <p className="text-sm text-slate-500 font-medium">Seleccione un grado y periodo arriba para ver la lista.</p>
+                      </td>
+                    </tr>
+                  ) : estudiantes.map(est => (
+                    <tr key={est.id} className="group hover:bg-slate-50/80 transition-colors">
+                      <td className="py-4 px-8">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-xs shadow-inner border border-slate-200 uppercase">
+                            {est.nombre.charAt(0)}
+                          </div>
+                          <span className="font-bold text-slate-800 text-[14px] group-hover:text-amber-600 transition-colors">{est.nombre} {est.apellido}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-8">
+                        <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 text-[11px] font-black tracking-widest uppercase rounded-lg border border-slate-200/60">
+                          {est.asistencia || '100%'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-8">
+                        <span className={`inline-block px-2.5 py-1 text-[11px] font-black tracking-widest uppercase rounded-lg border ${(est.promedio || 0) < 10.5 ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
+                          {est.promedio ? est.promedio.toFixed(1) : 'S/N'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-8">
+                        <span className={`text-[11px] font-black tracking-widest uppercase ${(est.promedio || 0) < 10.5 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                          {(est.promedio || 0) < 10.5 ? 'Requiere Apoyo' : 'Aprobado'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-8">
+                        <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => { setDetalleEstudiante(est); setShowDetalleModal(true); }}
+                            className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
+                          >
+                            <BookOpen size={14} strokeWidth={2.5} />
+                            Ver Detalle
                           </button>
                           <button 
                             onClick={() => handleDescargarLibreta(est.nombre)}
-                            className="px-3 py-1.5 text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm" 
-                            title="Generar Libreta Individual"
+                            className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-100"
                           >
-                            <FileDown size={14} /> Libreta
+                            <FileDown size={14} strokeWidth={2.5} />
+                            Descargar Libreta
                           </button>
                         </div>
                       </td>
@@ -833,15 +870,15 @@ export default function GestionEvaluaciones() {
               </table>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* CONTENIDO TAB 3: ASISTENCIA */}
-      {activeTab === 'asistencia' && (
-        <div className="animate-fade-in">
-          <ReportesAsistencia isEmbedded={true} />
-        </div>
-      )}
+        {/* CONTENIDO TAB 3: ASISTENCIA */}
+        {activeTab === 'asistencia' && (
+          <div className="flex-1 overflow-auto">
+             <ReportesAsistencia isEmbedded={true} />
+          </div>
+        )}
+      </div>
 
       {/* TOAST NOTIFICATION */}
       {toastMsg && (

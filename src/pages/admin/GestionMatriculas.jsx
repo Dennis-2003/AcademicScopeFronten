@@ -116,7 +116,7 @@ export default function GestionMatriculas({ isEmbedded = false }) {
   if (cargando) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin w-8 h-8 text-indigo-600" />
+        <Loader2 className="animate-spin w-8 h-8 text-slate-900" />
       </div>
     );
   }
@@ -157,150 +157,131 @@ export default function GestionMatriculas({ isEmbedded = false }) {
         </div>
       )}
 
-      {/* SPLIT VIEW LAYOUT: Flex row forzado SIEMPRE para evitar que colapse */}
-      <div className={`flex flex-row gap-4 lg:gap-6 flex-1 items-start ${isEmbedded ? 'pb-12' : ''}`}>
+      {/* ENTERPRISE TABLE VIEW */}
+      <div className={`flex-1 bg-white rounded-[2rem] border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col min-h-[500px] w-full ${isEmbedded ? 'mb-12' : 'mb-8'}`}>
         
-        {/* LEFT PANEL - LIST OF GRADOS */}
-        <div className="w-[220px] lg:w-[260px] xl:w-[280px] shrink-0 flex flex-col bg-white rounded-[1.5rem] border border-slate-200 shadow-sm overflow-hidden h-[calc(100vh-280px)] min-h-[500px]">
-          <div className="p-4 lg:p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
-            <h2 className="text-[13px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-              <GraduationCap size={16} className="text-indigo-600" /> Niveles
-            </h2>
-          </div>
+        {/* TABS HEADER / FILTERS */}
+        <div className="p-6 bg-slate-50/50 flex flex-col xl:flex-row items-center justify-between gap-4 shrink-0 border-b border-slate-100">
           
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
+          {/* PILLS DE NIVELES */}
+          <div className="flex gap-2 overflow-x-auto pb-2 xl:pb-0 hide-scrollbar w-full xl:w-auto">
             {grados.map(grado => {
               const count = matriculasGlobales.filter(m => m.grado?.id === grado.id).length;
               const isSelected = selectedGradoId === grado.id;
-              
               return (
                 <button
                   key={grado.id}
                   onClick={() => setSelectedGradoId(grado.id)}
-                  className={`w-full text-left p-3.5 rounded-xl transition-all duration-200 group flex items-center justify-between ${
-                    isSelected 
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' 
-                      : 'hover:bg-slate-50 text-slate-700'
-                  }`}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${isSelected ? 'bg-slate-900 text-amber-400 shadow-md shadow-slate-900/20' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}`}
                 >
-                  <div className="truncate pr-2">
-                    <h3 className={`font-bold text-[13px] lg:text-[14px] truncate ${isSelected ? 'text-white' : 'text-slate-800'}`}>
-                      {grado.nombre}
-                    </h3>
-                    <p className={`text-[10px] lg:text-[11px] font-medium mt-0.5 truncate ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>
-                      {grado.nivel}
-                    </p>
-                  </div>
-                  <span className={`text-[10px] lg:text-[11px] font-bold px-2 py-0.5 rounded-lg shrink-0 ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-                  }`}>
+                  <GraduationCap size={16} strokeWidth={2.5} />
+                  {grado.nombre}
+                  <span className={`px-2 py-0.5 rounded-lg text-[10px] ${isSelected ? 'bg-amber-400/20 text-amber-400' : 'bg-slate-100 text-slate-500'}`}>
                     {count}
                   </span>
                 </button>
               );
             })}
           </div>
+
+          {/* SEARCH & ADD */}
+          <div className="flex items-center gap-3 w-full xl:w-auto">
+            <div className="relative flex-1 xl:w-64">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input
+                type="text"
+                placeholder="Buscar alumno..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 outline-none transition-all shadow-sm"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button 
+              onClick={openModal}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-amber-400 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md shadow-slate-900/20 active:scale-95 whitespace-nowrap"
+            >
+              <UserPlus size={18} strokeWidth={2.5} />
+              Matricular
+            </button>
+          </div>
         </div>
 
-        {/* RIGHT PANEL - MATRICULAS DETAIL */}
-        <div className="flex-1 bg-white rounded-[1.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col relative min-w-0 md:h-[calc(100vh-280px)] min-h-[400px] md:min-h-[500px]">
-          
+        {/* DATA TABLE */}
+        <div className="flex-1 overflow-auto bg-white [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
           {gradoSeleccionado ? (
-            <>
-              {/* Toolbar Right Panel - UX Mejorado con flex-wrap para evitar que se corte */}
-              <div className="p-4 lg:p-5 border-b border-slate-100 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 lg:gap-4 bg-slate-50/30 shrink-0">
-                <h2 className="text-[15px] lg:text-lg font-black text-slate-800 flex items-center gap-2 whitespace-nowrap shrink-0">
-                  {gradoSeleccionado.nombre}
-                </h2>
-                
-                <div className="flex flex-1 min-w-[200px] items-center justify-end gap-2 lg:gap-3">
-                  <div className="relative flex-1 max-w-[240px]">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
-                      type="text" 
-                      placeholder="Buscar..." 
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 rounded-xl bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none font-medium text-[12px] lg:text-[13px] text-slate-700 shadow-sm"
-                    />
-                  </div>
-                  <button 
-                    onClick={openModal}
-                    className="flex items-center justify-center gap-1.5 px-3 lg:px-4 py-2 rounded-xl font-bold text-[12px] lg:text-[13px] bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 shrink-0"
-                  >
-                    <UserPlus size={14} strokeWidth={2.5} />
-                    <span>Matricular</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Lista de Alumnos */}
-              <div className="flex-1 overflow-y-auto p-4 lg:p-5 bg-slate-50/30">
+            <table className="w-full text-left border-collapse min-w-[800px]">
+              <thead className="bg-white sticky top-0 z-10 shadow-sm">
+                <tr>
+                  <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Estudiante</th>
+                  <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">DNI</th>
+                  <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Sección</th>
+                  <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100/80">
                 {matriculasFiltradas.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center max-w-sm mx-auto p-6">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
-                      <Users size={24} className="text-slate-300" />
-                    </div>
-                    <h3 className="text-[15px] font-bold text-slate-800 mb-1">Sin alumnos matriculados</h3>
-                    <p className="text-[13px] text-slate-500 font-medium">
-                      {searchTerm ? 'No hay resultados para la búsqueda.' : `Aún no has matriculado a ningún estudiante en ${gradoSeleccionado.nombre}.`}
-                    </p>
-                    {!searchTerm && (
-                      <button onClick={openModal} className="mt-5 px-5 py-2.5 rounded-xl font-bold text-[13px] bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-                        Matricular primer alumno
-                      </button>
-                    )}
-                  </div>
+                  <tr>
+                    <td colSpan="4" className="py-16 text-center">
+                       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 border border-slate-100 mb-4">
+                         <Users className="text-slate-300" size={28} />
+                       </div>
+                       <h3 className="text-lg font-black text-slate-800 mb-1">Sin alumnos matriculados</h3>
+                       <p className="text-sm text-slate-500 font-medium">{searchTerm ? 'No hay resultados para la búsqueda.' : 'Aún no has matriculado a ningún estudiante en este grado.'}</p>
+                       {!searchTerm && (
+                         <button onClick={openModal} className="mt-4 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors">
+                           Matricular Primer Alumno
+                         </button>
+                       )}
+                    </td>
+                  </tr>
                 ) : (
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 lg:gap-4">
-                    {matriculasFiltradas.map(m => (
-                      <div key={m.id} className="bg-white border border-slate-200 p-4 rounded-[1.25rem] flex items-center justify-between hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/5 transition-all group relative overflow-hidden">
-                        
-                        {/* Decoración de fondo */}
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-slate-50 to-transparent rounded-bl-full -z-10 opacity-50 group-hover:from-indigo-50 transition-colors"></div>
-
-                        <div className="flex items-center gap-3.5 z-10">
-                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 text-indigo-700 flex items-center justify-center font-black text-[15px] shrink-0 shadow-sm">
+                  matriculasFiltradas.map(m => (
+                    <tr key={m.id} className="group hover:bg-slate-50/80 transition-colors">
+                      <td className="py-4 px-8">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-sm shadow-inner border border-slate-200 uppercase flex-shrink-0">
                             {m.estudiante?.nombre?.charAt(0)}{m.estudiante?.apellido?.charAt(0)}
                           </div>
-                          <div>
-                            <h4 className="font-bold text-[14px] text-slate-800 leading-tight mb-1 group-hover:text-indigo-900 transition-colors">
-                              {m.estudiante?.apellido}, {m.estudiante?.nombre}
-                            </h4>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
-                                <IdCard size={10} className="text-slate-400" /> {m.estudiante?.dni}
-                              </span>
-                              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
-                                SEC {m.seccion || 'A'}
-                              </span>
-                            </div>
-                          </div>
+                          <span className="font-bold text-[15px] text-slate-800 group-hover:text-amber-600 transition-colors">
+                            {m.estudiante?.apellido}, {m.estudiante?.nombre}
+                          </span>
                         </div>
-                        <button 
-                          onClick={() => eliminarMatricula(m.id)} 
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-rose-500 transition-all opacity-0 group-hover:opacity-100 shrink-0 z-10 shadow-sm"
-                          title="Retirar matrícula"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                      </td>
+                      <td className="py-4 px-8">
+                        <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                          <IdCard size={14} className="text-slate-400" />
+                          {m.estudiante?.dni}
+                        </span>
+                      </td>
+                      <td className="py-4 px-8">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-lg">
+                          SEC {m.seccion || 'A'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-8 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => eliminarMatricula(m.id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" 
+                            title="Retirar matrícula"
+                          >
+                            <Trash2 size={16} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
-              </div>
-            </>
+              </tbody>
+            </table>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in bg-slate-50/50">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-5 relative">
-                <GraduationCap size={32} className="text-indigo-200" />
-                <div className="absolute -right-2 -bottom-2 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg border-[3px] border-slate-50">
-                  <CheckCircle2 size={14} className="text-white" />
-                </div>
+            <div className="flex-1 flex flex-col items-center justify-center p-16 text-center">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 mb-5">
+                <GraduationCap size={32} className="text-slate-300" />
               </div>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight mb-2">Selecciona un nivel</h3>
-              <p className="text-[13px] text-slate-500 font-medium max-w-xs mx-auto">
-                Elige un nivel o grado del panel izquierdo para ver los estudiantes matriculados o registrar nuevos alumnos.
+              <h3 className="text-lg font-black text-slate-800 mb-2">Selecciona un nivel</h3>
+              <p className="text-sm text-slate-500 font-medium">
+                Elige un grado en la barra superior para ver los estudiantes matriculados.
               </p>
             </div>
           )}
@@ -409,7 +390,7 @@ export default function GestionMatriculas({ isEmbedded = false }) {
                 form="matriculaForm"
                 type="submit" 
                 disabled={isSubmitting}
-                className="flex-1 py-3 rounded-xl font-bold text-[13px] text-white bg-slate-900 hover:bg-indigo-600 transition-all shadow-lg shadow-slate-900/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl font-bold text-[13px] text-white bg-amber-400 hover:bg-amber-300 text-slate-900 transition-all shadow-lg shadow-slate-900/20 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isSubmitting ? 'Guardando...' : (
                   <>

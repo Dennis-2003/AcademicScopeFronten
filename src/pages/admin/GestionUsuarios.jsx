@@ -155,239 +155,236 @@ export default function GestionUsuarios() {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto animate-fade-in pb-12 font-sans">
+    <div className="w-full min-h-[calc(100vh-80px)] flex flex-col pb-8 font-sans">
       
-      {/* --- HEADER --- */}
-      <header className="mb-8 md:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-3">
-            <ShieldCheck size={14} strokeWidth={2.5} />
-            Admin / Directorio
-          </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
-            Gestión de Usuarios
-          </h1>
-          <p className="text-slate-500 font-medium mt-2 text-sm md:text-base">
-            Administra el acceso de estudiantes, docentes, tutores y administradores.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {mainTab === 'directorio' && (
-            <>
-              <ExportButton 
-                headers={[
-                  { label: 'DNI', accessor: 'dni' },
-                  { label: 'Nombre', accessor: 'nombre' },
-                  { label: 'Apellido', accessor: 'apellido' },
-                  { label: 'Rol', accessor: 'rol' },
-                ]}
-                data={usuarios}
-                filename="usuarios.csv"
-              />
-              <button 
-                onClick={openNewModal}
-                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-[15px] bg-indigo-600 text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/20 hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <UserPlus size={20} strokeWidth={2.5} />
-                NUEVO USUARIO
-              </button>
-            </>
-          )}
-        </div>
-      </header>
-
-      {/* --- MAIN TABS --- */}
-      <div className="flex border-b border-slate-200 mb-6">
-        <button
-          onClick={() => setMainTab('directorio')}
-          className={`px-6 py-3.5 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
-            mainTab === 'directorio'
-              ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50'
-              : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-          }`}
-        >
-          <Users size={16} />
-          Directorio de Personas
-        </button>
-        <button
-          onClick={() => setMainTab('matriculas')}
-          className={`px-6 py-3.5 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
-            mainTab === 'matriculas'
-              ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50'
-              : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-          }`}
-        >
-          <IdCard size={16} />
-          Gestión de Matrículas
-        </button>
-      </div>
-
-      {mainTab === 'matriculas' ? (
-        <div className="animate-fade-in">
-          <GestionMatriculas isEmbedded={true} />
-        </div>
-      ) : (
-        <>
-          {/* --- TOOLBAR (Tabs & Search) --- */}
-      <div className="bg-white rounded-2xl p-2 border border-slate-200/70 shadow-sm mb-6 flex flex-col xl:flex-row items-center justify-between gap-4">
+      {/* GLOBAL HERO HEADER - COMPACTO */}
+      <div className="relative mb-6 bg-slate-900 rounded-[2rem] p-8 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-slate-800 shrink-0 w-full">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0f172a] to-[#1e1b4b]"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-[50px]"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-500/10 rounded-full blur-[50px]"></div>
         
-        {/* TABS */}
-        <div className="flex w-full xl:w-auto overflow-x-auto hide-scrollbar bg-slate-50 p-1 rounded-xl border border-slate-100">
-          {[
-            { id: 'ALL', label: 'Todos' },
-            { id: 'ESTUDIANTE', label: 'Estudiantes' },
-            { id: 'DOCENTE', label: 'Docentes' },
-            { id: 'TUTOR', label: 'Apoderados' },
-            { id: 'ADMIN', label: 'Administradores' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === tab.id ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/60' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 border border-transparent'}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* SEARCH */}
-        <div className="flex w-full xl:w-auto items-center gap-2">
-          <div className="relative w-full xl:w-80">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Buscar por DNI, nombre o correo..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200/60 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm font-medium text-slate-700 placeholder-slate-400 outline-none"
-            />
-          </div>
-          <button className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-colors">
-            <Filter size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* --- CONTENT --- */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <h2 className="text-[15px] font-bold text-slate-700">Directorio de Personas</h2>
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-200/50 text-slate-600">
-            {filteredUsuarios.length} usuarios
-          </span>
-        </div>
-
-        {loading ? (
-          <div className="p-16 flex flex-col items-center justify-center space-y-4">
-            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-            <span className="text-sm font-bold text-slate-400">CARGANDO USUARIOS...</span>
-          </div>
-        ) : filteredUsuarios.length === 0 ? (
-          <div className="p-16 flex flex-col items-center text-center">
-            <div className="w-24 h-24 rounded-full bg-slate-50 flex items-center justify-center mb-6 border border-slate-100">
-              <Users size={40} className="text-slate-300" strokeWidth={1.5} />
-            </div>
-            <h4 className="text-xl font-bold text-slate-800 mb-2">No se encontraron usuarios</h4>
-            <p className="text-sm font-medium text-slate-500 max-w-sm">
-              {searchTerm ? 'Ningún usuario coincide con la búsqueda o filtros actuales.' : 'No hay usuarios registrados en el sistema.'}
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-amber-400 border border-slate-700/60 shadow-inner">
+                <ShieldCheck size={24} strokeWidth={2.5} />
+              </div>
+              <div>
+                Gestión de <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">Usuarios</span>
+              </div>
+            </h1>
+            <p className="text-slate-400 font-medium mt-2 text-sm ml-16">
+              Administra el acceso de estudiantes, docentes, tutores y administradores.
             </p>
           </div>
+          
+          <div className="flex items-center gap-3">
+            {mainTab === 'directorio' && (
+              <>
+                <ExportButton 
+                  headers={[
+                    { label: 'DNI', accessor: 'dni' },
+                    { label: 'Nombre', accessor: 'nombre' },
+                    { label: 'Apellido', accessor: 'apellido' },
+                    { label: 'Rol', accessor: 'rol' },
+                  ]}
+                  data={usuarios}
+                  filename="usuarios.csv"
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ENTERPRISE TABLE VIEW */}
+      <div className="flex-1 bg-white rounded-[2rem] border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col min-h-0 w-full mb-8">
+        
+        {/* TABS HEADER */}
+        <div className="flex items-center px-8 border-b border-slate-100 shrink-0 overflow-x-auto hide-scrollbar">
+          <button
+            onClick={() => setMainTab('directorio')}
+            className={`px-6 py-5 text-sm font-black tracking-wide border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${mainTab === 'directorio' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+          >
+            <Users size={16} strokeWidth={2.5} />
+            DIRECTORIO DE PERSONAS
+          </button>
+          <button
+            onClick={() => setMainTab('matriculas')}
+            className={`px-6 py-5 text-sm font-black tracking-wide border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${mainTab === 'matriculas' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+          >
+            <IdCard size={16} strokeWidth={2.5} />
+            GESTIÓN DE MATRÍCULAS
+          </button>
+        </div>
+
+        {mainTab === 'matriculas' ? (
+          <div className="flex-1 overflow-auto">
+            <GestionMatriculas isEmbedded={true} />
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Usuario</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Rol</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Contacto</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {paginatedData.map(u => (
-                  <tr key={u.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                          {u.nombre?.charAt(0)}{u.apellido?.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-[15px] font-bold text-slate-800">
-                            {u.apellido}, {u.nombre}
-                          </p>
-                          <p className="text-xs font-medium text-slate-500 flex items-center gap-1 mt-0.5">
-                            <IdCard size={12} /> {u.dni}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    
-                    <td className="px-6 py-4">
-                      {getRoleBadge(u.rol)}
-                    </td>
-                    
-                    <td className="px-6 py-4">
-                      {u.email ? (
-                        <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600">
-                          <Mail size={14} className="text-slate-400" />
-                          {u.email}
-                        </div>
-                      ) : (
-                        <span className="text-sm font-medium text-slate-400 italic">No registrado</span>
-                      )}
-                    </td>
-                    
-                    <td className="px-6 py-4">
-                      {u.activo ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="relative flex h-2.5 w-2.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                          </span>
-                          <span className="text-xs font-bold text-slate-700 uppercase">Activo</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-2.5 w-2.5 rounded-full bg-slate-300"></span>
-                          <span className="text-xs font-bold text-slate-500 uppercase">Inactivo</span>
-                        </div>
-                      )}
-                    </td>
-                    
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => handleToggleStatus(u)}
-                          className={`p-2 rounded-lg transition-colors ${u.activo ? 'text-slate-400 hover:text-amber-600 hover:bg-amber-50' : 'text-amber-500 hover:text-emerald-600 hover:bg-emerald-50'}`} 
-                          title={u.activo ? "Desactivar" : "Activar"}
-                        >
-                          {u.activo ? <Lock size={16} strokeWidth={2} /> : <Unlock size={16} strokeWidth={2} />}
-                        </button>
-                        <button 
-                          onClick={() => openEditModal(u)}
-                          className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" 
-                          title="Editar"
-                        >
-                          <Edit2 size={16} strokeWidth={2} />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(u.id)}
-                          className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Eliminar"
-                        >
-                          <Trash2 size={16} strokeWidth={2} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* TOOLBAR & FILTERS */}
+            <div className="p-6 bg-slate-50/50 flex flex-col xl:flex-row items-center justify-between gap-4 shrink-0 border-b border-slate-100">
+              
+              {/* PILLS */}
+              <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar w-full xl:w-auto">
+                {[
+                  { id: 'ALL', label: 'Todos' },
+                  { id: 'ESTUDIANTE', label: 'Estudiantes' },
+                  { id: 'DOCENTE', label: 'Docentes' },
+                  { id: 'TUTOR', label: 'Apoderados' },
+                  { id: 'ADMIN', label: 'Administradores' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-slate-900 text-amber-400 shadow-md shadow-slate-900/20' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}`}
+                  >
+                    {tab.label}
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* SEARCH & ADD */}
+              <div className="flex items-center gap-3 w-full xl:w-auto">
+                <div className="relative flex-1 xl:w-64">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Buscar por DNI, nombre o correo..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 outline-none transition-all shadow-sm"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <button 
+                  onClick={openNewModal}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-amber-400 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md shadow-slate-900/20 active:scale-95 whitespace-nowrap"
+                >
+                  <UserPlus size={18} strokeWidth={2.5} />
+                  Nuevo
+                </button>
+              </div>
+            </div>
+
+            {/* DATA TABLE */}
+            <div className="flex-1 overflow-auto bg-white [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+              <table className="w-full text-left border-collapse min-w-[800px]">
+                <thead className="bg-white sticky top-0 z-10 shadow-sm">
+                  <tr>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Usuario</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Rol</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Contacto</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Estado</th>
+                    <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100/80">
+                  {loading ? (
+                    <tr>
+                      <td colSpan="5" className="py-16 text-center">
+                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 border border-slate-100 mb-4">
+                           <Users className="text-slate-300 animate-pulse" size={28} />
+                         </div>
+                         <h3 className="text-lg font-black text-slate-800 mb-1">Cargando usuarios...</h3>
+                      </td>
+                    </tr>
+                  ) : filteredUsuarios.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="py-16 text-center">
+                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 border border-slate-100 mb-4">
+                           <Users className="text-slate-300" size={28} />
+                         </div>
+                         <h3 className="text-lg font-black text-slate-800 mb-1">No se encontraron usuarios</h3>
+                         <p className="text-sm text-slate-500 font-medium">{searchTerm ? 'Ningún usuario coincide con la búsqueda.' : 'No hay usuarios registrados.'}</p>
+                      </td>
+                    </tr>
+                  ) : paginatedData.map(u => (
+                    <tr key={u.id} className="group hover:bg-slate-50/80 transition-colors">
+                      <td className="py-4 px-8">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-sm shadow-inner border border-slate-200 uppercase flex-shrink-0">
+                            {u.nombre?.charAt(0)}{u.apellido?.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-[15px] font-bold text-slate-800 group-hover:text-amber-600 transition-colors">
+                              {u.apellido}, {u.nombre}
+                            </p>
+                            <p className="text-xs font-bold text-slate-400 flex items-center gap-1 mt-0.5">
+                              <IdCard size={12} /> {u.dni}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <td className="py-4 px-8">
+                        {getRoleBadge(u.rol)}
+                      </td>
+                      
+                      <td className="py-4 px-8">
+                        {u.email ? (
+                          <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                            <Mail size={14} className="text-slate-400" />
+                            {u.email}
+                          </div>
+                        ) : (
+                          <span className="text-xs font-bold text-slate-400 italic">No registrado</span>
+                        )}
+                      </td>
+                      
+                      <td className="py-4 px-8">
+                        {u.activo ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="relative flex h-2.5 w-2.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            <span className="text-[10px] font-black tracking-widest text-emerald-600 uppercase">Activo</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2.5 w-2.5 rounded-full bg-slate-300"></span>
+                            <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">Inactivo</span>
+                          </div>
+                        )}
+                      </td>
+                      
+                      <td className="py-4 px-8 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => handleToggleStatus(u)}
+                            className={`p-1.5 rounded-lg transition-colors ${u.activo ? 'text-slate-400 hover:text-amber-600 hover:bg-amber-50' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'}`} 
+                            title={u.activo ? "Desactivar" : "Activar"}
+                          >
+                            {u.activo ? <Lock size={16} strokeWidth={2.5} /> : <Unlock size={16} strokeWidth={2.5} />}
+                          </button>
+                          <button 
+                            onClick={() => openEditModal(u)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" 
+                            title="Editar"
+                          >
+                            <Edit2 size={16} strokeWidth={2.5} />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(u.id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Eliminar"
+                          >
+                            <Trash2 size={16} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="border-t border-slate-100">
+               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
           </div>
         )}
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {deleteTarget && createPortal(
@@ -402,185 +399,189 @@ export default function GestionUsuarios() {
         document.body
       )}
 
-      {/* --- MODAL NUEVO USUARIO --- */}
+      {/* --- DRAWER NUEVO / EDITAR USUARIO --- */}
       {showModal && createPortal(
-        <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)' }}
-          onClick={() => setShowModal(false)}
-        >
+        <div className="fixed inset-0 z-[100] flex justify-end">
           <div 
-            style={{ width: '90vw', maxWidth: '600px', backgroundColor: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative', flexShrink: 0 }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-slate-50/50">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-indigo-100 text-indigo-600">
-                <UserPlus size={24} strokeWidth={2.5} />
-              </div>
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
+          ></div>
+
+          <div className="relative w-full max-w-[450px] bg-white h-full shadow-2xl flex flex-col animate-slide-in-right shrink-0">
+            
+            <div className="px-7 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">{usuarioAEditar ? 'Editar Usuario' : 'Registrar Nuevo Usuario'}</h3>
-                <p className="text-xs font-medium text-slate-500 mt-1">Ingresa los datos personales y asigna un rol de sistema.</p>
+                <h3 className="text-xl font-black text-slate-800 tracking-tight mb-0.5">
+                  {usuarioAEditar ? 'Editar Usuario' : 'Nuevo Usuario'}
+                </h3>
+                <p className="text-xs font-medium text-slate-500">
+                  Ingresa los datos personales y asigna un rol de sistema.
+                </p>
               </div>
+              <button 
+                onClick={() => setShowModal(false)} 
+                className="w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+              >
+                <X size={20} strokeWidth={2.5} />
+              </button>
             </div>
             
-            <div className="p-6 md:p-8">
+            <div className="p-7 flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {errorMsg && (
-                <div className="mb-6 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-bold flex items-center gap-3">
-                  <AlertCircle size={18} />
+                <div className="mb-6 px-4 py-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle size={16} strokeWidth={2.5} />
                   {errorMsg}
                 </div>
               )}
               
-              <form onSubmit={handleSave}>
+              <form id="userForm" onSubmit={handleSave} className="space-y-5">
                 
                 {!usuarioAEditar && (
-                  <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-                    <KeyRound size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-start gap-3">
+                    <KeyRound size={20} className="text-slate-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-[13px] font-bold text-blue-800">Contraseña por defecto</h4>
-                      <p className="text-xs text-blue-600/80 mt-1 font-medium leading-relaxed">
-                        El sistema utilizará automáticamente el <strong>DNI</strong> ingresado como contraseña inicial. El usuario deberá cambiarla en su primer inicio de sesión.
+                      <h4 className="text-[13px] font-bold text-slate-700">Contraseña por defecto</h4>
+                      <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">
+                        El sistema utilizará automáticamente el <strong>DNI</strong> ingresado como contraseña inicial.
                       </p>
                     </div>
                   </div>
                 )}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                
+                <div className="grid grid-cols-2 gap-4">
                   {/* NOMBRES */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Nombres</label>
-                    <div className="relative">
-                      <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input 
-                        required 
-                        type="text" 
-                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-[14px] text-slate-800 font-medium outline-none" 
-                        value={form.nombre} 
-                        onChange={e => setForm({ ...form, nombre: e.target.value })}
-                        placeholder="Ej. Juan Carlos"
-                      />
-                    </div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nombres</label>
+                    <input 
+                      required 
+                      type="text" 
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 placeholder:text-slate-400" 
+                      value={form.nombre} 
+                      onChange={e => setForm({ ...form, nombre: e.target.value })}
+                      placeholder="Ej. Juan Carlos"
+                    />
                   </div>
                   
                   {/* APELLIDOS */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Apellidos</label>
-                    <div className="relative">
-                      <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input 
-                        required 
-                        type="text" 
-                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-[14px] text-slate-800 font-medium outline-none" 
-                        value={form.apellido} 
-                        onChange={e => setForm({ ...form, apellido: e.target.value })}
-                        placeholder="Ej. Pérez Gómez"
-                      />
-                    </div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Apellidos</label>
+                    <input 
+                      required 
+                      type="text" 
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 placeholder:text-slate-400" 
+                      value={form.apellido} 
+                      onChange={e => setForm({ ...form, apellido: e.target.value })}
+                      placeholder="Ej. Pérez Gómez"
+                    />
                   </div>
+                </div>
 
+                <div className="grid grid-cols-2 gap-4">
                   {/* DNI */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Documento (DNI)</label>
-                    <div className="relative">
-                      <IdCard size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input 
-                        required 
-                        type="text"
-                        maxLength="8"
-                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-[14px] text-slate-800 font-medium outline-none" 
-                        value={form.dni} 
-                        onChange={e => setForm({ ...form, dni: e.target.value })}
-                        placeholder="00000000"
-                      />
-                    </div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">DNI</label>
+                    <input 
+                      required 
+                      type="text"
+                      maxLength="8"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-black text-sm text-slate-900 placeholder:text-slate-400" 
+                      value={form.dni} 
+                      onChange={e => setForm({ ...form, dni: e.target.value })}
+                      placeholder="00000000"
+                    />
                   </div>
 
                   {/* ROL */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Rol de Usuario</label>
-                    <div className="relative">
-                      <ShieldCheck size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <select 
-                        className="w-full pl-11 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-[14px] text-slate-800 font-medium outline-none appearance-none" 
-                        value={form.rol} 
-                        onChange={e => setForm({ ...form, rol: e.target.value })}
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
-                      >
-                        <option value="ESTUDIANTE">Estudiante</option>
-                        <option value="DOCENTE">Docente</option>
-                        <option value="TUTOR">Tutor / Apoderado</option>
-                        <option value="ADMIN">Administrador</option>
-                      </select>
-                    </div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Rol de Usuario</label>
+                    <select 
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 appearance-none" 
+                      value={form.rol} 
+                      onChange={e => setForm({ ...form, rol: e.target.value })}
+                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
+                    >
+                      <option value="ESTUDIANTE">Estudiante</option>
+                      <option value="DOCENTE">Docente</option>
+                      <option value="TUTOR">Tutor / Apoderado</option>
+                      <option value="ADMIN">Administrador</option>
+                    </select>
                   </div>
                 </div>
 
                 {/* TUTOR (APODERADO) - Solo visible si el rol es ESTUDIANTE */}
                 {form.rol === 'ESTUDIANTE' && (
-                  <div className="mb-6">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Apoderado / Tutor (Opcional)</label>
-                    <div className="relative">
-                      <Users size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <select 
-                        className="w-full pl-11 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-[14px] text-slate-800 font-medium outline-none appearance-none" 
-                        value={form.tutorId} 
-                        onChange={e => setForm({ ...form, tutorId: e.target.value })}
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
-                      >
-                        <option value="">Ninguno (O asignar más adelante)</option>
-                        {tutores.map(t => (
-                          <option key={t.id} value={t.id}>{t.apellido}, {t.nombre} (DNI: {t.dni})</option>
-                        ))}
-                      </select>
-                    </div>
+                  <div className="animate-fade-in">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Apoderado / Tutor (Opcional)</label>
+                    <select 
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 appearance-none" 
+                      value={form.tutorId} 
+                      onChange={e => setForm({ ...form, tutorId: e.target.value })}
+                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
+                    >
+                      <option value="">Ninguno (O asignar más adelante)</option>
+                      {tutores.map(t => (
+                        <option key={t.id} value={t.id}>{t.apellido}, {t.nombre} (DNI: {t.dni})</option>
+                      ))}
+                    </select>
                   </div>
                 )}
 
                 {/* CORREO */}
-                <div className="mb-8">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Correo Electrónico (Opcional)</label>
-                  <div className="relative">
-                    <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
-                      type="email" 
-                      className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-[14px] text-slate-800 font-medium outline-none" 
-                      value={form.email} 
-                      onChange={e => setForm({ ...form, email: e.target.value })}
-                      placeholder="correo@ejemplo.com"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Correo Electrónico (Opcional)</label>
+                  <input 
+                    type="email" 
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 placeholder:text-slate-400" 
+                    value={form.email} 
+                    onChange={e => setForm({ ...form, email: e.target.value })}
+                    placeholder="correo@ejemplo.com"
+                  />
                 </div>
                 
-                <div className="flex gap-3 pt-6 border-t border-slate-100">
-                  <button 
-                    type="button" 
-                    onClick={() => setShowModal(false)} 
-                    disabled={isSubmitting}
-                    className="flex-1 py-3.5 rounded-xl bg-white border border-slate-200 text-[14px] font-bold text-slate-600 transition-colors hover:bg-slate-50 flex items-center justify-center gap-2"
-                  >
-                    <XCircle size={18} />
-                    Cancelar
-                  </button>
-                  <button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="flex-1 py-3.5 rounded-xl bg-indigo-600 text-white text-[14px] font-bold transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? 'Guardando...' : (
-                      <>
-                        <CheckCircle2 size={18} />
-                        {usuarioAEditar ? 'Guardar Cambios' : 'Crear Usuario'}
-                      </>
-                    )}
-                  </button>
-                </div>
               </form>
+            </div>
+
+            <div className="px-7 py-6 border-t border-slate-100 bg-white shrink-0 flex gap-3">
+              <button 
+                type="button" 
+                onClick={() => setShowModal(false)} 
+                disabled={isSubmitting}
+                className="flex-[0.4] py-3 rounded-xl font-bold text-sm text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                form="userForm"
+                type="submit" 
+                disabled={isSubmitting}
+                className="flex-1 py-3 rounded-xl font-bold text-sm text-slate-900 bg-amber-400 hover:bg-amber-300 transition-all shadow-lg shadow-amber-400/20 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Guardando...' : (usuarioAEditar ? 'Guardar Cambios' : 'Crear Usuario')}
+              </button>
             </div>
           </div>
         </div>,
         document.body
       )}
-      
-      </>)}
+
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+        .animate-slide-in-right {
+          animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.4s ease forwards;
+        }
+      `}</style>
     </div>
   );
 }

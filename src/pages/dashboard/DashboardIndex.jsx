@@ -47,25 +47,39 @@ function catmullRom2bezier(pts) {
 
 function WelcomeBanner({ user, fechaStr }) {
   return (
-    <div className="relative w-full mb-8 rounded-[1.25rem] p-6 md:p-8 overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-gradient-bg shadow-[0_8px_30px_rgb(99,102,241,0.2)] border border-indigo-500 group">
+    <div className="relative w-full mb-8 rounded-[1.25rem] p-6 md:p-10 overflow-hidden bg-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-slate-800 group">
       
-      {/* Animated Background Elements */}
-      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
-      <div className="absolute bottom-0 left-10 -mb-10 w-40 h-40 rounded-full bg-indigo-400 opacity-20 blur-2xl group-hover:translate-x-10 transition-transform duration-1000"></div>
-      <div className="absolute top-1/2 right-1/4 w-32 h-32 rounded-full bg-fuchsia-500 opacity-20 blur-3xl animate-pulse"></div>
+      {/* Background Gradient & Texture */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0f172a] to-[#1e1b4b] opacity-100"></div>
       
-      <div className="relative z-10 flex items-center justify-between">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-indigo-50 text-xs font-extrabold tracking-wider border border-white/20 mb-4 shadow-sm backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      {/* Subtle Premium Glows */}
+      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 rounded-full bg-blue-500 opacity-[0.07] blur-[50px] group-hover:opacity-[0.12] transition-opacity duration-700"></div>
+      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-amber-500 opacity-[0.05] blur-[50px] group-hover:translate-x-4 transition-transform duration-1000"></div>
+      
+      {/* Content */}
+      <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="flex-1 w-full">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 text-slate-300 text-xs font-semibold tracking-wide border border-slate-700/60 mb-5 shadow-sm backdrop-blur-md">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
             Panel de Control Principal
           </div>
-          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white mb-2 drop-shadow-md">
-            Bienvenido de vuelta, {user.nombre}
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-3 drop-shadow-sm">
+            Bienvenido de vuelta,{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500">
+              {user.nombre}
+            </span>
           </h1>
-          <p className="text-indigo-100 font-medium text-sm md:text-base opacity-90">
-            {fechaStr} — Todo está listo para gestionar tu institución.
+          <p className="text-slate-400 font-medium text-sm md:text-base leading-relaxed">
+            {fechaStr} <span className="mx-2 text-slate-600">|</span> Todo está listo para gestionar tu institución con excelencia.
           </p>
+        </div>
+        
+        {/* Decorative element on the right */}
+        <div className="hidden md:flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm shadow-inner transform group-hover:rotate-12 transition-transform duration-500">
+           <Activity className="w-8 h-8 text-amber-400/80" />
         </div>
       </div>
     </div>
@@ -465,12 +479,15 @@ function AdminDashboard({ user }) {
           <DoubleBarChart data={chartData} />
           
           {/* Floating Action Button */}
-          <div 
-            onClick={() => setIsModalOpen(true)}
-            className="absolute -bottom-6 -right-4 w-14 h-14 bg-sky-500 rounded-full shadow-lg shadow-sky-500/40 flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform"
-          >
-            <MessageSquare size={24} fill="currentColor" />
-          </div>
+          {createPortal(
+            <div 
+              onClick={() => setIsModalOpen(true)}
+              className="fixed bottom-6 right-6 z-[99999] w-14 h-14 bg-sky-500 rounded-full shadow-lg shadow-sky-500/40 flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform"
+            >
+              <MessageSquare size={24} fill="currentColor" />
+            </div>,
+            document.body
+          )}
         </section>
 
       </div>

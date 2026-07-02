@@ -4,81 +4,11 @@ import api from '../../services/api';
 import { 
   BookOpen, Rocket, Plus, Trash2, Edit2, AlertCircle, 
   BookMarked, Search, Users, User, LayoutGrid, X, 
-  ChevronRight, Sparkles, Percent, Save, Loader2
+  ChevronRight, Sparkles, Percent, Save, Loader2,
+  GraduationCap
 } from 'lucide-react';
 
-function GradoListItem({ nombre, subtitle, courseCount, isTaller, isSelected, onClick }) {
-  const Icon = isTaller ? Rocket : BookMarked;
-  
-  const activeClass = isSelected 
-    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/25 border-transparent translate-x-1' 
-    : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200 hover:border-indigo-300 hover:shadow-md';
 
-  const iconActive = isSelected ? 'text-white' : (isTaller ? 'text-orange-500' : 'text-indigo-500');
-  const iconBg = isSelected ? 'bg-white/20 shadow-inner' : (isTaller ? 'bg-orange-50' : 'bg-indigo-50');
-  const subtitleActive = isSelected ? 'text-indigo-200' : 'text-slate-400';
-  const badgeClass = isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600';
-
-  return (
-    <button 
-      onClick={onClick}
-      className={`group w-full flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 text-left ${activeClass}`}
-    >
-      <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center transition-colors ${iconBg}`}>
-        <Icon size={20} className={iconActive} strokeWidth={2.5} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="text-[15px] font-black truncate leading-tight mb-1">{nombre}</h3>
-        <p className={`text-[10px] font-black uppercase tracking-widest truncate ${subtitleActive}`}>{subtitle}</p>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className={`text-xs font-black px-2.5 py-1 rounded-lg transition-colors ${badgeClass}`}>
-          {courseCount}
-        </div>
-        <ChevronRight size={18} className={`transition-transform duration-300 ${isSelected ? 'text-white translate-x-1 opacity-100' : 'text-slate-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-1'}`} />
-      </div>
-    </button>
-  );
-}
-
-function CourseCard({ curso, docente, onEdit, onDelete, onConfigEvals }) {
-  return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1 transition-all relative group flex flex-col h-full">
-      <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-md rounded-lg p-1.5 shadow-sm border border-slate-100 z-10">
-        <button onClick={() => onConfigEvals(curso)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors" title="Configurar Evaluaciones">
-          <Percent size={16} strokeWidth={2.5} />
-        </button>
-        <button onClick={() => onEdit(curso)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Editar Curso">
-          <Edit2 size={16} strokeWidth={2.5} />
-        </button>
-        <button onClick={() => onDelete(curso.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors" title="Eliminar Curso">
-          <Trash2 size={16} strokeWidth={2.5} />
-        </button>
-      </div>
-
-      <div className="flex items-start gap-4 mb-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${curso.tipo === 'TALLER' ? 'bg-amber-50 text-amber-500 border border-amber-100' : 'bg-indigo-50 text-indigo-500 border border-indigo-100'}`}>
-          {curso.tipo === 'TALLER' ? <Rocket size={22} strokeWidth={2.5} /> : <BookOpen size={22} strokeWidth={2.5} />}
-        </div>
-        <div className="pt-0.5">
-          <span className="inline-block px-2.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-black tracking-widest uppercase rounded-lg mb-1.5">
-            {curso.codigo}
-          </span>
-          <h4 className="text-lg font-black text-slate-800 leading-tight pr-12 group-hover:text-indigo-700 transition-colors">
-            {curso.nombre}
-          </h4>
-        </div>
-      </div>
-      
-      <div className="mt-auto pt-4 border-t border-slate-100/80">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-50/80 inline-flex px-3 py-2 rounded-xl border border-slate-100">
-          <User size={14} className="text-slate-400" />
-          {docente ? `${docente.nombre} ${docente.apellido}` : 'Sin docente asignado'}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ConfiguracionEvaluacionesModal({ curso, onClose }) {
   const [evaluaciones, setEvaluaciones] = useState([]);
@@ -237,10 +167,10 @@ export default function GestionCursos() {
   const [docentes, setDocentes] = useState([]);
   const [cargando, setCargando] = useState(true);
   
-  // Estado para la vista de detalle
-  const [selectedGrado, setSelectedGrado] = useState(null);
+  // TABS STATE
+  const [selectedGradoId, setSelectedGradoId] = useState('ALL');
   
-  // Estado para el modal
+  // Modal states
   const [showModal, setShowModal] = useState(false);
   const [cursoAEditar, setCursoAEditar] = useState(null);
   const [nuevoCurso, setNuevoCurso] = useState({
@@ -248,7 +178,6 @@ export default function GestionCursos() {
   });
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modal Eval
@@ -292,28 +221,35 @@ export default function GestionCursos() {
     fetchDatos();
   }, []);
 
-  const primaria = grados.filter(g => g.nivel === 'Primaria');
-  const secundaria = grados.filter(g => g.nivel === 'Secundaria');
-  const talleres = grados.filter(g => g.id === 'talleres-extracurriculares');
+  // Filter only secondary grades (and optionally talleres if you want to keep them, but user said ONLY secondary, so let's just show all grades that exist assuming they are secondary, or strictly filter to 'Secundaria').
+  // Let's strictly use the ones from the backend and maybe filter out Primaria just in case.
+  const activeGrados = grados;
 
-  // Actualizar el selectedGrado si hay cambios en 'grados'
-  useEffect(() => {
-    if (selectedGrado) {
-      const updated = grados.find(g => g.id === selectedGrado.id);
-      if (updated) setSelectedGrado(updated);
-    } else if (grados.length > 0 && !selectedGrado) {
-      // Auto seleccionar el primer grado disponible
-      setSelectedGrado(grados[0]);
+  let cursosMostrados = [];
+  if (selectedGradoId === 'ALL') {
+    activeGrados.forEach(g => {
+      if (g.cursos) cursosMostrados = [...cursosMostrados, ...g.cursos.map(c => ({...c, gradoRef: g}))];
+    });
+  } else {
+    const found = activeGrados.find(g => g.id === selectedGradoId);
+    if (found && found.cursos) {
+      cursosMostrados = found.cursos.map(c => ({...c, gradoRef: found}));
     }
-  }, [grados]);
+  }
 
-  // ACCIONES
+  if (searchTerm) {
+    cursosMostrados = cursosMostrados.filter(c => 
+      c.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      c.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
   const handleEdit = (curso, gradoId) => {
     setCursoAEditar(curso);
     setNuevoCurso({
       ...curso,
       docenteId: curso.docente ? curso.docente.id : '',
-      grado: { id: gradoId }
+      grado: { id: gradoId || '' }
     });
     setShowModal(true);
   };
@@ -322,7 +258,6 @@ export default function GestionCursos() {
     if (!window.confirm('¿Eliminar este curso permanentemente?')) return;
     try {
       await api.delete(`/cursos/${id}`);
-      
       const nuevosGrados = grados.map(g => ({
         ...g,
         cursos: g.cursos.filter(c => c.id !== id)
@@ -348,28 +283,19 @@ export default function GestionCursos() {
 
       if (cursoAEditar) {
         const res = await api.put(`/cursos/${cursoAEditar.id}`, payload);
-        const cursoActualizado = res.data;
-        const targetGradoId = isTaller ? 'talleres-extracurriculares' : payload.grado.id;
-
-        const nuevosGrados = grados.map(g => {
-          let newCursos = g.cursos.filter(c => c.id !== cursoAEditar.id);
-          if (g.id === targetGradoId) {
-            newCursos.push(cursoActualizado);
-          }
-          return { ...g, cursos: newCursos };
-        });
+        const nuevosGrados = grados.map(g => ({
+          ...g,
+          cursos: g.cursos.map(c => c.id === cursoAEditar.id ? res.data : c)
+        }));
         setGrados(nuevosGrados);
       } else {
         const res = await api.post('/cursos', payload);
-        const cursoCreado = res.data;
-        const targetGradoId = isTaller ? 'talleres-extracurriculares' : payload.grado.id;
-        
         const nuevosGrados = grados.map(g => {
-          if (g.id === targetGradoId) {
-            return {
-              ...g,
-              cursos: [...(g.cursos || []), cursoCreado]
-            };
+          if (isTaller && g.id === 'talleres-extracurriculares') {
+            return { ...g, cursos: [...g.cursos, res.data] };
+          }
+          if (!isTaller && g.id === payload.grado.id) {
+            return { ...g, cursos: [...g.cursos, res.data] };
           }
           return g;
         });
@@ -377,106 +303,80 @@ export default function GestionCursos() {
       }
       closeAndResetModal();
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Error al guardar el curso.');
+      setErrorMsg(err.response?.data?.message || 'Error al guardar el curso');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const closeAndResetModal = () => {
-    setShowModal(false);
-    setCursoAEditar(null);
-    setNuevoCurso({ nombre: '', codigo: '', tipo: 'REGULAR', docenteId: '', grado: { id: selectedGrado ? selectedGrado.id : '' } });
-    setErrorMsg('');
-  };
-
   const openNewCourseModal = () => {
     setCursoAEditar(null);
-    setNuevoCurso({ 
-      nombre: '', 
-      codigo: '', 
-      tipo: selectedGrado?.id === 'talleres-extracurriculares' ? 'TALLER' : 'REGULAR', 
-      docenteId: '', 
-      grado: { id: selectedGrado ? selectedGrado.id : '' } 
+    setNuevoCurso({
+      nombre: '', codigo: '', tipo: 'REGULAR', docenteId: '', grado: { id: selectedGradoId === 'ALL' ? '' : selectedGradoId }
     });
+    setErrorMsg('');
     setShowModal(true);
   };
 
-  const totalCursos = (grados || []).reduce((acc, g) => acc + (g?.cursos?.length || 0), 0);
-  const totalDocentes = (docentes || []).length;
+  const closeAndResetModal = () => {
+    setShowModal(false);
+    setTimeout(() => {
+      setCursoAEditar(null);
+      setNuevoCurso({ nombre: '', codigo: '', tipo: 'REGULAR', docenteId: '', grado: { id: '' } });
+      setErrorMsg('');
+    }, 300);
+  };
 
   if (cargando) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="relative">
-           <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
-           <div className="w-16 h-16 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin absolute inset-0"></div>
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] w-full">
+        <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4">
+          <BookOpen className="text-indigo-500 animate-pulse" size={24} />
         </div>
+        <p className="text-slate-500 font-medium">Cargando gestión académica...</p>
       </div>
     );
   }
 
-  const renderLeftSection = (title, data) => {
-    if (!data || data.length === 0) return null;
-    return (
-      <div className="mb-6">
-        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 px-2 flex items-center gap-2">
-          {title === 'Extracurriculares' ? <Sparkles size={14} className="text-amber-500" /> : <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>}
-          {title}
-        </h4>
-        <div className="flex flex-col gap-2">
-          {data.map(grado => (
-            <GradoListItem
-              key={grado.id}
-              nombre={grado.nombre}
-              subtitle={grado.nivel}
-              courseCount={grado.cursos?.length || 0}
-              isTaller={grado.id === 'talleres-extracurriculares'}
-              isSelected={selectedGrado?.id === grado.id}
-              onClick={() => { setSelectedGrado(grado); setSearchTerm(''); }}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
+  const totalCursos = activeGrados.reduce((acc, curr) => acc + (curr.cursos?.length || 0), 0);
+  const totalDocentes = docentes.length;
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-8 h-[calc(100vh-80px)] flex flex-col">
+    <div className="w-full min-h-[calc(100vh-80px)] flex flex-col">
       {/* GLOBAL HERO HEADER - COMPACTO */}
-      <div className="relative mb-6 bg-slate-900 rounded-[2rem] p-8 overflow-hidden shadow-xl shadow-indigo-900/10 shrink-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-violet-950"></div>
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl"></div>
+      <div className="relative mb-6 bg-slate-900 rounded-[2rem] p-8 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-slate-800 shrink-0 w-full">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0f172a] to-[#1e1b4b]"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-[50px]"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-500/10 rounded-full blur-[50px]"></div>
         
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="max-w-2xl">
             <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-300 border border-indigo-500/20 shadow-inner">
+              <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-amber-400 border border-slate-700/60 shadow-inner">
                 <LayoutGrid size={24} strokeWidth={2.5} />
               </div>
               <div>
-                Gestión <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Académica</span>
+                Gestión <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">Académica</span>
               </div>
             </h1>
           </div>
 
           <div className="flex gap-4">
-            <div className="bg-white/5 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/10 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-300">
+            <div className="bg-white/5 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/10 flex items-center gap-4 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-300">
                 <BookMarked size={18} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest mb-0.5">Total Cursos</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total Cursos</p>
                 <p className="text-2xl font-black text-white leading-none">{totalCursos}</p>
               </div>
             </div>
-            <div className="bg-white/5 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/10 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center text-violet-300">
+            <div className="bg-white/5 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/10 flex items-center gap-4 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-300">
                 <Users size={18} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-violet-200/60 uppercase tracking-widest mb-0.5">Total Docentes</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total Docentes</p>
                 <p className="text-2xl font-black text-white leading-none">{totalDocentes}</p>
               </div>
             </div>
@@ -484,115 +384,136 @@ export default function GestionCursos() {
         </div>
       </div>
 
-      {/* SPLIT VIEW LAYOUT */}
-      <div className="flex flex-row gap-6 flex-1 min-h-[600px]">
+      {/* ENTERPRISE TABLE VIEW */}
+      <div className="flex-1 bg-white rounded-[2rem] border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col min-h-0 w-full mb-8">
         
-        {/* LEFT PANEL - LIST OF GRADOS */}
-        <div className="w-[320px] shrink-0 flex flex-col bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="text-lg font-black text-slate-800 tracking-tight">Estructura Académica</h2>
-            <p className="text-xs font-bold text-slate-500 mt-1">Selecciona un grado para ver sus cursos</p>
+        {/* TOOLBAR & FILTERS */}
+        <div className="p-6 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-4 shrink-0 border-b border-slate-100">
+          
+          {/* PILLS */}
+          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar w-full md:w-auto">
+            <button
+              onClick={() => setSelectedGradoId('ALL')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${selectedGradoId === 'ALL' ? 'bg-slate-900 text-amber-400 shadow-md shadow-slate-900/20' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}`}
+            >
+              Todos los Grados
+            </button>
+            {activeGrados.map(g => (
+              <button
+                key={g.id}
+                onClick={() => setSelectedGradoId(g.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${selectedGradoId === g.id ? 'bg-slate-900 text-amber-400 shadow-md shadow-slate-900/20' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}`}
+              >
+                {g.nombre}
+              </button>
+            ))}
           </div>
-          <div className="p-4 overflow-y-auto flex-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
-            {renderLeftSection('Primaria', primaria)}
-            {renderLeftSection('Secundaria', secundaria)}
-            {renderLeftSection('Extracurriculares', talleres)}
+
+          {/* ACTIONS */}
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:w-64">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input
+                type="text"
+                placeholder="Buscar curso o código..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 outline-none transition-all shadow-sm"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button 
+              onClick={openNewCourseModal}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-amber-400 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md shadow-slate-900/20 active:scale-95 whitespace-nowrap"
+            >
+              <Plus size={18} strokeWidth={2.5} />
+              Nuevo
+            </button>
           </div>
+
         </div>
 
-        {/* RIGHT PANEL - DETAIL VIEW */}
-        <div className="flex-1 bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col relative min-w-0">
-          {!selectedGrado ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-fade-in">
-               <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6">
-                 <LayoutGrid size={40} strokeWidth={1.5} />
-               </div>
-               <h3 className="text-2xl font-black text-slate-800 mb-2">Ningún nivel seleccionado</h3>
-               <p className="text-slate-500 font-medium max-w-sm">
-                 Por favor, elige un grado o taller en el menú lateral izquierdo para gestionar sus cursos y docentes.
-               </p>
-            </div>
-          ) : (
-            <div className="flex-1 flex flex-col h-full animate-fade-in">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -z-10 -translate-y-1/2 translate-x-1/2 opacity-60"></div>
-              
-              <div className="px-8 py-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white/50 backdrop-blur-sm z-10 shrink-0">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md ${selectedGrado.id === 'talleres-extracurriculares' ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-orange-500/20' : 'bg-gradient-to-br from-indigo-500 to-violet-600 shadow-indigo-500/20'}`}>
-                    {selectedGrado.id === 'talleres-extracurriculares' ? <Rocket size={20} strokeWidth={2.5} /> : <BookOpen size={20} strokeWidth={2.5} />}
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight flex items-center gap-3">
-                      {selectedGrado.nombre}
-                      <span className={`px-2.5 py-1 ${selectedGrado.id === 'talleres-extracurriculares' ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700'} text-[10px] font-black uppercase tracking-widest rounded-lg align-middle`}>
-                        {selectedGrado.nivel}
-                      </span>
-                    </h2>
-                    <p className="text-slate-500 font-bold text-xs mt-1 uppercase tracking-widest">
-                      {selectedGrado.cursos?.length || 0} cursos registrados
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input
-                      type="text"
-                      placeholder="Buscar curso..."
-                      className="pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all w-[220px]"
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <button 
-                    onClick={openNewCourseModal}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 hover:-translate-y-0.5 transition-all shadow-md active:scale-95 whitespace-nowrap"
-                  >
-                    <Plus size={18} strokeWidth={2.5} />
-                    Añadir Curso
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-8 flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {(selectedGrado.cursos || [])
-                    .filter(c => c.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || c.codigo.toLowerCase().includes(searchTerm.toLowerCase()))
-                    .map(curso => (
-                      <CourseCard
-                        key={curso.id}
-                        curso={curso}
-                        docente={curso.docente}
-                        onEdit={(c) => handleEdit(c, selectedGrado.id)}
-                        onDelete={handleDelete}
-                        onConfigEvals={(c) => {
-                          setCursoParaEval(c);
-                          setShowEvalModal(true);
-                        }}
-                      />
-                    ))
-                  }
-                </div>
-                  
-                {selectedGrado.cursos && selectedGrado.cursos.length === 0 && (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-10 bg-slate-50 rounded-3xl border border-slate-200 border-dashed">
-                    <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-300 mb-4 border border-slate-100">
-                      <BookOpen size={28} strokeWidth={2} />
+        {/* DATA TABLE */}
+        <div className="flex-1 overflow-auto bg-white [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead className="bg-white sticky top-0 z-10 shadow-sm">
+              <tr>
+                <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Código</th>
+                <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Curso</th>
+                <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Grado</th>
+                <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Docente Asignado</th>
+                <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100/80">
+              {cursosMostrados.map(curso => (
+                <tr key={curso.id} className="group hover:bg-slate-50/80 transition-colors">
+                  <td className="py-4 px-8">
+                    <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-black tracking-widest uppercase rounded-lg border border-slate-200/60">
+                      {curso.codigo}
+                    </span>
+                  </td>
+                  <td className="py-4 px-8">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-inner border ${curso.tipo === 'TALLER' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                        {curso.tipo === 'TALLER' ? <Rocket size={16} strokeWidth={2.5} /> : <BookOpen size={16} strokeWidth={2.5} />}
+                      </div>
+                      <span className="font-bold text-slate-800 text-sm group-hover:text-amber-600 transition-colors">{curso.nombre}</span>
                     </div>
-                    <h3 className="text-lg font-black text-slate-800 mb-1">Aún no hay cursos</h3>
-                    <p className="text-slate-500 font-medium text-sm mb-6 max-w-sm">Añade el primer curso para configurar el plan de estudios de {selectedGrado.nombre}.</p>
-                    <button 
-                      onClick={openNewCourseModal}
-                      className="text-indigo-600 font-black hover:text-indigo-700 bg-indigo-50 px-5 py-2.5 rounded-xl transition-colors hover:bg-indigo-100 text-sm"
-                    >
-                      Añadir curso ahora
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+                  </td>
+                  <td className="py-4 px-8">
+                    <span className="text-xs font-bold text-slate-500">
+                      {curso.gradoRef ? curso.gradoRef.nombre : 'Taller General'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-8">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center overflow-hidden shrink-0">
+                        <User size={12} className="text-slate-500" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600">
+                        {curso.docente ? `${curso.docente.nombre} ${curso.docente.apellido}` : <span className="text-slate-400 italic font-normal">Sin asignar</span>}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-8">
+                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => { setCursoParaEval(curso); setShowEvalModal(true); }}
+                        className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100"
+                      >
+                        <Percent size={14} strokeWidth={2.5} />
+                        Notas
+                      </button>
+                      <button 
+                        onClick={() => handleEdit(curso, curso.gradoRef?.id)}
+                        className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                      >
+                        <Edit2 size={16} strokeWidth={2.5} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(curso.id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              
+              {cursosMostrados.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="py-16 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 border border-slate-100 mb-4">
+                      <BookOpen className="text-slate-300" size={28} />
+                    </div>
+                    <h3 className="text-lg font-black text-slate-800 mb-1">No se encontraron cursos</h3>
+                    <p className="text-sm text-slate-500 font-medium">Prueba ajustando los filtros de búsqueda o agrega uno nuevo.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -600,11 +521,11 @@ export default function GestionCursos() {
       {showModal && createPortal(
         <div className="fixed inset-0 z-[100] flex justify-end">
           <div 
-            className="absolute inset-0 bg-transparent"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={closeAndResetModal}
           ></div>
 
-          <div className="relative w-full max-w-[400px] bg-white h-full shadow-[calc(-20px)_0_60px_-15px_rgba(0,0,0,0.3)] flex flex-col animate-slide-in-right shrink-0">
+          <div className="relative w-full max-w-[400px] bg-white h-full shadow-2xl flex flex-col animate-slide-in-right shrink-0">
             
             <div className="px-7 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
               <div>
@@ -637,7 +558,7 @@ export default function GestionCursos() {
                   <input 
                     required 
                     type="text" 
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 placeholder:text-slate-400" 
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 placeholder:text-slate-400" 
                     value={nuevoCurso.nombre} 
                     onChange={e => setNuevoCurso({ ...nuevoCurso, nombre: e.target.value })} 
                     placeholder="Ej. Álgebra Avanzada" 
@@ -650,7 +571,7 @@ export default function GestionCursos() {
                     <input 
                       required 
                       type="text" 
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all outline-none font-black text-sm text-indigo-900 placeholder:text-slate-400 uppercase tracking-wider" 
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-black text-sm text-slate-900 placeholder:text-slate-400 uppercase tracking-wider" 
                       value={nuevoCurso.codigo} 
                       onChange={e => setNuevoCurso({ ...nuevoCurso, codigo: e.target.value.toUpperCase() })} 
                       placeholder="ALG-101" 
@@ -659,7 +580,7 @@ export default function GestionCursos() {
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tipo</label>
                     <select 
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 appearance-none" 
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 appearance-none" 
                       value={nuevoCurso.tipo} 
                       onChange={e => setNuevoCurso({ ...nuevoCurso, tipo: e.target.value })}
                       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
@@ -675,13 +596,13 @@ export default function GestionCursos() {
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Grado Asociado</label>
                     <select 
                       required 
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 appearance-none" 
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 appearance-none" 
                       value={nuevoCurso.grado.id} 
                       onChange={e => setNuevoCurso({ ...nuevoCurso, grado: { id: e.target.value } })}
                       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
                     >
                       <option value="">Selecciona un grado...</option>
-                      {grados.filter(g => g.id !== 'talleres-extracurriculares').map(g => <option key={g.id} value={g.id}>{g.nombre} ({g.nivel})</option>)}
+                      {activeGrados.filter(g => g.id !== 'talleres-extracurriculares').map(g => <option key={g.id} value={g.id}>{g.nombre} ({g.nivel})</option>)}
                     </select>
                   </div>
                 )}
@@ -690,7 +611,7 @@ export default function GestionCursos() {
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Docente Asignado</label>
                   <select 
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 appearance-none" 
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 focus:bg-white transition-all outline-none font-bold text-sm text-slate-800 appearance-none" 
                     value={nuevoCurso.docenteId} 
                     onChange={e => setNuevoCurso({ ...nuevoCurso, docenteId: e.target.value })}
                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
@@ -715,7 +636,7 @@ export default function GestionCursos() {
                 form="cursoForm"
                 type="submit" 
                 disabled={isSubmitting}
-                className="flex-1 py-3 rounded-xl font-bold text-sm text-white bg-slate-900 hover:bg-indigo-600 transition-all shadow-lg shadow-slate-900/20 disabled:opacity-50"
+                className="flex-1 py-3 rounded-xl font-bold text-sm text-slate-900 bg-amber-400 hover:bg-amber-300 transition-all shadow-lg shadow-amber-400/20 disabled:opacity-50"
               >
                 {isSubmitting ? 'Guardando...' : (cursoAEditar ? 'Guardar Cambios' : 'Registrar Curso')}
               </button>
@@ -735,6 +656,8 @@ export default function GestionCursos() {
       )}
       
       <style>{`
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes slideInRight {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }

@@ -115,10 +115,12 @@ export default function Perfil() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-4xl mx-auto animate-fade-in font-sans pb-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Mi Perfil</h1>
-        <p className="text-slate-500 font-medium mt-1">Gestiona tu información personal y configuración de seguridad</p>
+    <div className="w-full max-w-7xl mx-auto animate-fade-in font-sans pb-12">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Mi Perfil</h1>
+          <p className="text-slate-500 font-medium mt-1">Gestiona tu información personal y configuración de seguridad</p>
+        </div>
       </div>
 
       {status.success && (
@@ -148,205 +150,205 @@ export default function Perfil() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        {/* COLUMNA IZQUIERDA: Avatar + Datos Fijos */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm flex flex-col items-center text-center">
-            <div className="relative group">
-              <div className="w-24 h-24 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-3xl font-black mb-4 shadow-inner overflow-hidden">
-                {avatarPreview ? (
-                  <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
-                ) : user.avatarUrl ? (
-                  <img src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:8080/api/usuarios/avatar/${user.avatarUrl}`} alt="avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <span>{(user.nombre?.charAt(0) || '') + (user.apellido?.charAt(0) || '')}</span>
-                )}
-              </div>
-              <label className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center cursor-pointer">
-                <Camera size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-              </label>
+      {/* HERO PERFIL */}
+      <div className="relative w-full bg-slate-900 rounded-[2rem] p-8 md:p-12 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-slate-800 mb-8 flex flex-col md:flex-row items-center justify-between gap-8">
+        {/* Fondo elegante */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0f172a] to-[#1e1b4b] opacity-100"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full opacity-[0.05] blur-[50px]"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500 rounded-full opacity-[0.05] blur-[50px]"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8 w-full">
+          {/* Avatar */}
+          <div className="relative group shrink-0">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 text-amber-400 flex items-center justify-center text-5xl font-black shadow-xl shadow-black/40 border-4 border-slate-800 overflow-hidden">
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+              ) : user.avatarUrl ? (
+                <img src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:8080/api/usuarios/avatar/${user.avatarUrl}`} alt="avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span>{(user.nombre?.charAt(0) || '') + (user.apellido?.charAt(0) || '')}</span>
+              )}
             </div>
-            <h2 className="text-xl font-bold text-slate-800">{user.nombre} {user.apellido}</h2>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider mt-2">
+            <label className="absolute inset-0 rounded-full bg-slate-900/0 group-hover:bg-slate-900/60 transition-colors flex items-center justify-center cursor-pointer">
+              <Camera size={32} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
+              <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+            </label>
+          </div>
+
+          {/* Info Principal */}
+          <div className="flex-1 text-center md:text-left flex flex-col justify-center pt-2 md:pt-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/80 text-amber-400 text-xs font-bold uppercase tracking-wider border border-slate-700/60 mb-4 shadow-sm backdrop-blur-md self-center md:self-start">
               <Shield size={14} />
               {user.rol}
             </div>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-sm mb-2">{user.nombre} {user.apellido}</h2>
+            <p className="text-slate-400 text-sm md:text-base font-medium">Panel de control de tu cuenta institucional</p>
+          </div>
+          
+          {/* Detalles rápidos (DNI, Estado) */}
+          <div className="flex flex-col gap-4 self-center md:self-end bg-slate-800/50 p-6 md:p-8 rounded-2xl border border-slate-700/50 backdrop-blur-sm min-w-[240px]">
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Documento (DNI)</label>
+              <div className="text-lg font-extrabold text-white mt-1">{user.dni}</div>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Estado de Cuenta</label>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-sm font-bold text-white">Activa</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* DATOS PERSONALES */}
+        <div className="bg-white rounded-[2rem] p-8 md:p-10 border border-slate-200/80 shadow-[0_8px_30px_rgba(0,0,0,0.04)] h-full flex flex-col">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 shadow-inner text-slate-700 flex items-center justify-center">
+                <User size={24} strokeWidth={2} />
+              </div>
+              <div>
+                <h3 className="text-xl font-extrabold text-slate-900">Datos Personales</h3>
+                <p className="text-sm font-medium text-slate-500 mt-0.5">Información básica de tu cuenta</p>
+              </div>
+            </div>
+            {!editing ? (
+              <button onClick={() => setEditing(true)} className="flex items-center justify-center gap-2 px-5 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all">
+                <Edit3 size={16} /> Editar
+              </button>
+            ) : (
+              <div className="flex gap-3">
+                <button onClick={() => setEditing(false)} className="px-5 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all">
+                  Cancelar
+                </button>
+                <button onClick={handleProfileSave} disabled={status.loading} className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-amber-400 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-md shadow-slate-900/20 disabled:opacity-70">
+                  <Save size={16} /> Guardar
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm">
-            <h3 className="text-[13px] font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <User size={16} /> Detalles
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase">Documento (DNI)</label>
-                <div className="text-sm font-bold text-slate-700 mt-0.5">{user.dni}</div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase">Estado</label>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span className="text-sm font-bold text-emerald-700">Cuenta Activa</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 content-start">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Nombres</label>
+              <input
+                type="text"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                disabled={!editing}
+                className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all disabled:opacity-60 disabled:bg-slate-100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Apellidos</label>
+              <input
+                type="text"
+                name="apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+                disabled={!editing}
+                className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all disabled:opacity-60 disabled:bg-slate-100"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-slate-700 mb-2">Correo Electrónico</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail size={18} className="text-slate-400" />
                 </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase">Rol</label>
-                <div className="text-sm font-bold text-slate-700 mt-0.5 capitalize">{user.rol?.toLowerCase()}</div>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={!editing}
+                  placeholder="correo@ejemplo.com"
+                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all disabled:opacity-60 disabled:bg-slate-100"
+                />
               </div>
             </div>
           </div>
         </div>
 
-        {/* COLUMNA DERECHA */}
-        <div className="lg:col-span-2 space-y-6">
-
-          {/* DATOS PERSONALES */}
-          <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200/60 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                  <User size={20} strokeWidth={2.5} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800">Datos Personales</h3>
-                  <p className="text-sm font-medium text-slate-500">Información básica de tu cuenta</p>
-                </div>
-              </div>
-              {!editing ? (
-                <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all">
-                  <Edit3 size={16} /> Editar
-                </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button onClick={() => setEditing(false)} className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all">
-                    Cancelar
-                  </button>
-                  <button onClick={handleProfileSave} disabled={status.loading} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all disabled:opacity-70">
-                    <Save size={16} /> Guardar
-                  </button>
-                </div>
-              )}
+        {/* SEGURIDAD */}
+        <div className="bg-white rounded-[2rem] p-8 md:p-10 border border-slate-200/80 shadow-[0_8px_30px_rgba(0,0,0,0.04)] h-full flex flex-col">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 shadow-inner text-amber-600 flex items-center justify-center">
+              <KeyRound size={24} strokeWidth={2} />
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Nombres</label>
-                <input
-                  type="text"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  disabled={!editing}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Apellidos</label>
-                <input
-                  type="text"
-                  name="apellido"
-                  value={formData.apellido}
-                  onChange={handleChange}
-                  disabled={!editing}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Correo Electrónico</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Mail size={18} className="text-slate-400" />
-                  </div>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={!editing}
-                    placeholder="correo@ejemplo.com"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
-                </div>
-              </div>
+            <div>
+              <h3 className="text-xl font-extrabold text-slate-900">Seguridad de la Cuenta</h3>
+              <p className="text-sm font-medium text-slate-500 mt-0.5">Actualiza tu contraseña</p>
             </div>
           </div>
 
-          {/* SEGURIDAD */}
-          <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200/60 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                <KeyRound size={20} strokeWidth={2.5} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-800">Seguridad de la Cuenta</h3>
-                <p className="text-sm font-medium text-slate-500">Actualiza tu contraseña</p>
+          <form onSubmit={handlePasswordSubmit} className="space-y-6 flex-1 flex flex-col">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Contraseña Actual</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-slate-400" />
+                </div>
+                <input
+                  type="password"
+                  name="passwordActual"
+                  value={formData.passwordActual}
+                  onChange={handleChange}
+                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
+                  placeholder="Ingresa tu contraseña actual"
+                  required
+                />
               </div>
             </div>
-
-            <form onSubmit={handlePasswordSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Contraseña Actual</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock size={18} className="text-slate-400" />
-                  </div>
-                  <input
-                    type="password"
-                    name="passwordActual"
-                    value={formData.passwordActual}
-                    onChange={handleChange}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                    placeholder="Ingresa tu contraseña actual"
-                    required
-                  />
-                </div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Nueva Contraseña</label>
+                <input
+                  type="password"
+                  name="passwordNuevo"
+                  value={formData.passwordNuevo}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5">Nueva Contraseña</label>
-                  <input
-                    type="password"
-                    name="passwordNuevo"
-                    value={formData.passwordNuevo}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                    placeholder="Mínimo 6 caracteres"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5">Confirmar Nueva</label>
-                  <input
-                    type="password"
-                    name="confirmarPassword"
-                    value={formData.confirmarPassword}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                    placeholder="Repite la contraseña"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Confirmar Nueva</label>
+                <input
+                  type="password"
+                  name="confirmarPassword"
+                  value={formData.confirmarPassword}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
+                  placeholder="Repite la contraseña"
+                  required
+                />
               </div>
-              <div className="pt-4 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={status.loading}
-                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm shadow-indigo-200 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {status.loading ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Save size={18} />
-                  )}
-                  Guardar Cambios
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div className="pt-6 mt-auto flex justify-end">
+              <button
+                type="submit"
+                disabled={status.loading}
+                className="flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-amber-400 text-sm font-bold rounded-xl transition-all shadow-md shadow-slate-900/20 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {status.loading ? (
+                  <div className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                ) : (
+                  <Save size={18} />
+                )}
+                Guardar Cambios
+              </button>
+            </div>
+          </form>
         </div>
-
       </div>
     </div>
   );
