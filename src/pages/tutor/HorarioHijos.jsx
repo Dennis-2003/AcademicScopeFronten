@@ -12,6 +12,7 @@ export default function HorarioHijos() {
   const [horarios, setHorarios] = useState([]);
   const [cargando, setCargando] = useState(true);
 
+  
   const seleccionarHijo = useCallback((hijo) => {
     setHijoActivo(hijo);
     cargarHorarioReal(hijo.id);
