@@ -12,9 +12,6 @@ import {
   UserCheck,
   BookMarked,
   Activity,
-  Clock,
-  Calendar,
-  MoreVertical,
   ChevronDown,
   MessageSquare,
   X,
@@ -48,11 +45,9 @@ function catmullRom2bezier(pts) {
 function WelcomeBanner({ user, fechaStr }) {
   return (
     <div className="relative w-full mb-8 rounded-[1.25rem] p-6 md:p-8 overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-gradient-bg shadow-[0_8px_30px_rgb(99,102,241,0.2)] border border-indigo-500 group">
-      
       {/* Animated Background Elements */}
       <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
       <div className="absolute bottom-0 left-10 -mb-10 w-40 h-40 rounded-full bg-indigo-400 opacity-20 blur-2xl group-hover:translate-x-10 transition-transform duration-1000"></div>
-      <div className="absolute top-1/2 right-1/4 w-32 h-32 rounded-full bg-fuchsia-500 opacity-20 blur-3xl animate-pulse"></div>
       
       <div className="relative z-10 flex items-center justify-between">
         <div>
@@ -117,7 +112,9 @@ function SmoothAreaChart({ data }) {
 
   const pts = data.cursosActivos.map((v, i) => ({
     x: ox + i * step,
-    y: h - oy - (v / maxVal) * (h - oy * 2)
+    y: h - oy - (v / maxVal) * (h - oy * 2),
+    value: v,
+    label: data.meses[i]
   }));
 
   const pathD = catmullRom2bezier(pts);
@@ -125,7 +122,7 @@ function SmoothAreaChart({ data }) {
 
   return (
     <div className="w-full mt-6">
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto overflow-visible">
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto overflow-visible group">
         <defs>
           <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4"/>
@@ -145,9 +142,23 @@ function SmoothAreaChart({ data }) {
           );
         })}
 
+        {/* X Axis Labels */}
+        {pts.map((p, i) => (
+          <text key={`x-${i}`} x={p.x} y={h} fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">
+            {p.label}
+          </text>
+        ))}
+
         {/* Fill and Line */}
-        <path d={fillD} fill="url(#areaGrad)" />
-        <path d={pathD} fill="none" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={fillD} fill="url(#areaGrad)" className="animate-fade-in transition-all duration-1000" />
+        <path d={pathD} fill="none" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="animate-slide-up transition-all duration-1000" />
+        
+        {/* Interactive Points */}
+        {pts.map((p, i) => (
+          <g key={`pt-${i}`} className="cursor-pointer">
+            <circle cx={p.x} cy={p.y} r="4" fill="white" stroke="#6366f1" strokeWidth="2" className="transition-all hover:r-6" />
+          </g>
+        ))}
       </svg>
     </div>
   );
@@ -168,34 +179,62 @@ function DoubleBarChart({ data }) {
     };
   });
 
-  const maxVal = Math.max(...bars.map(b => Math.max(b.top, b.bottom)));
+  const maxVal = Math.max(10, ...bars.map(b => Math.max(b.top, b.bottom)));
 
   return (
-    <div className="w-full mt-6 h-[200px] flex items-stretch justify-between px-2">
-      {/* Y Axis pseudo labels */}
-      <div className="flex flex-col justify-between text-[10px] font-bold text-slate-400 py-4 h-full pr-4 text-right">
-        <span>80k</span>
-        <span>53k</span>
-        <span>27k</span>
-        <span>0k</span>
-        <span>-27k</span>
-        <span>-53k</span>
-        <span>-80k</span>
-      </div>
-
-      {bars.map((bar, i) => (
-        <div key={i} className="flex flex-col items-center w-full relative h-full">
-          {/* Middle zero line */}
-          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-slate-100 z-0"></div>
-          
-          <div className="flex-1 flex flex-col justify-end items-center pb-1 w-full z-10">
-            <div className="w-3 md:w-4 bg-indigo-500 rounded-full" style={{ height: `${(bar.top / maxVal) * 90}%` }}></div>
-          </div>
-          <div className="flex-1 flex flex-col justify-start items-center pt-1 w-full z-10">
-            <div className="w-3 md:w-4 bg-rose-500 rounded-full" style={{ height: `${(bar.bottom / maxVal) * 90}%` }}></div>
-          </div>
+    <div className="w-full mt-6 h-[220px] flex flex-col justify-between">
+      <div className="flex-1 flex items-stretch justify-between px-2 relative">
+        {/* Y Axis pseudo labels */}
+        <div className="flex flex-col justify-between text-[10px] font-bold text-slate-400 py-4 h-full pr-4 text-right absolute -left-4 z-0 opacity-50">
+          <span>{Math.round(maxVal)}</span>
+          <span>{Math.round(maxVal/2)}</span>
+          <span>0</span>
+          <span>-{Math.round(maxVal/2)}</span>
+          <span>-{Math.round(maxVal)}</span>
         </div>
-      ))}
+
+        {bars.map((bar, i) => (
+          <div key={i} className="flex flex-col items-center w-full relative h-full group">
+            {/* Middle zero line */}
+            <div className="absolute top-1/2 left-0 w-full h-[1px] bg-slate-200 z-0"></div>
+            
+            {/* Tooltip that appears on hover */}
+            <div className="absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded -mt-6 z-20 whitespace-nowrap shadow-lg pointer-events-none">
+              Cursos: {bar.top}
+            </div>
+            
+            {/* Top Bar (Cursos) */}
+            <div className="flex-1 flex flex-col justify-end items-center pb-1 w-full z-10 cursor-pointer">
+              <div 
+                className="w-4 md:w-6 bg-gradient-to-t from-indigo-500 to-indigo-400 rounded-t-md shadow-sm transition-all duration-700 ease-out group-hover:opacity-80" 
+                style={{ height: `${(bar.top / maxVal) * 90}%` }}
+              ></div>
+            </div>
+            
+            {/* Bottom Bar (Asistencia) */}
+            <div className="flex-1 flex flex-col justify-start items-center pt-1 w-full z-10 cursor-pointer">
+              <div 
+                className="w-4 md:w-6 bg-gradient-to-b from-rose-500 to-rose-400 rounded-b-md shadow-sm transition-all duration-700 ease-out group-hover:opacity-80" 
+                style={{ height: `${(bar.bottom / maxVal) * 90}%` }}
+              ></div>
+            </div>
+
+            {/* Bottom tooltip */}
+            <div className="absolute bottom-0 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded -mb-6 z-20 whitespace-nowrap shadow-lg pointer-events-none">
+              Asistencia: {bar.bottom}%
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* X Axis labels */}
+      <div className="flex justify-between px-2 mt-4 ml-6">
+        {bars.map((bar, i) => (
+          <div key={i} className="w-full text-center text-[11px] font-bold text-slate-500">
+            {bar.label}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -268,8 +307,7 @@ function NotificationModal({ isOpen, onClose, usuarios }) {
         animation: 'slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
       }}
     >
-      {/* Fixed Header */}
-      <div style={{ padding: '24px 24px 20px 24px', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', backgroundColor: '#fff', zIndex: 10 }}>
+      <div style={{ padding: '24px 24px 20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', backgroundColor: '#fff', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'rgba(103, 80, 164, 0.1)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <MessageSquare size={24} fill="currentColor" />
@@ -281,36 +319,24 @@ function NotificationModal({ isOpen, onClose, usuarios }) {
         </div>
         <button 
           onClick={onClose} 
-          style={{ background: '#f8f7fc', border: 'none', cursor: 'pointer', color: '#64748b', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
-          onMouseOver={e => e.currentTarget.style.background = '#e2e8f0'}
-          onMouseOut={e => e.currentTarget.style.background = '#f8f7fc'}
+          style={{ background: '#f8f7fc', border: 'none', cursor: 'pointer', color: '#64748b', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           <X size={18} />
         </button>
       </div>
 
-      {/* Scrollable Body */}
-      <div className="custom-scrollbar" style={{ padding: '24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className="custom-scrollbar" style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
         {status.success && (
           <div style={{ marginBottom: '20px', backgroundColor: '#ecfdf5', color: '#047857', padding: '12px', borderRadius: '12px', border: '1px solid #a7f3d0', fontSize: '13px', fontWeight: 'bold', textAlign: 'center' }}>
             ¡Comunicado enviado con éxito!
           </div>
         )}
-        {status.error && (
-          <div style={{ marginBottom: '20px', backgroundColor: '#fef2f2', color: '#b91c1c', padding: '12px', borderRadius: '12px', border: '1px solid #fecaca', fontSize: '13px', fontWeight: 'bold', textAlign: 'center' }}>
-            {status.error}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Destinatario</label>
+          <div>
+            <label style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Destinatario</label>
             <select 
-              required
-              value={destinatarioId}
-              onChange={e => setDestinatarioId(e.target.value)}
-              className="form-control"
-              style={{ backgroundColor: '#f8f7fc', border: '1px solid transparent', padding: '14px', borderRadius: '12px', fontSize: '14px' }}
+              required value={destinatarioId} onChange={e => setDestinatarioId(e.target.value)}
+              style={{ width: '100%', backgroundColor: '#f8f7fc', border: '1px solid transparent', padding: '14px', borderRadius: '12px', fontSize: '14px', marginTop: '8px' }}
             >
               <option value="">Seleccione un usuario...</option>
               {usuarios.map(u => (
@@ -319,45 +345,30 @@ function NotificationModal({ isOpen, onClose, usuarios }) {
             </select>
           </div>
           
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Asunto</label>
+          <div>
+            <label style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Asunto</label>
             <input 
-              required
-              type="text"
-              value={titulo}
-              onChange={e => setTitulo(e.target.value)}
+              required type="text" value={titulo} onChange={e => setTitulo(e.target.value)}
               placeholder="Ej: Reunión de Padres"
-              className="form-control"
-              style={{ backgroundColor: '#f8f7fc', border: '1px solid transparent', padding: '14px', borderRadius: '12px', fontSize: '14px' }}
+              style={{ width: '100%', backgroundColor: '#f8f7fc', border: '1px solid transparent', padding: '14px', borderRadius: '12px', fontSize: '14px', marginTop: '8px' }}
             />
           </div>
           
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Mensaje</label>
+          <div>
+            <label style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Mensaje</label>
             <textarea 
-              required
-              value={mensaje}
-              onChange={e => setMensaje(e.target.value)}
+              required value={mensaje} onChange={e => setMensaje(e.target.value)}
               placeholder="Escribe los detalles aquí..."
-              className="form-control custom-scrollbar"
-              style={{ backgroundColor: '#f8f7fc', border: '1px solid transparent', padding: '14px', borderRadius: '12px', resize: 'none', height: '100px', fontSize: '14px' }}
+              style={{ width: '100%', backgroundColor: '#f8f7fc', border: '1px solid transparent', padding: '14px', borderRadius: '12px', resize: 'none', height: '100px', fontSize: '14px', marginTop: '8px' }}
             ></textarea>
           </div>
           
-          <div style={{ marginTop: '8px' }}>
-            <button 
-              type="submit" 
-              disabled={status.loading}
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '14px', justifyContent: 'center' }}
-            >
-              {status.loading ? "Enviando..." : (
-                <>
-                  <Send size={18} /> Enviar Ahora
-                </>
-              )}
-            </button>
-          </div>
+          <button 
+            type="submit" disabled={status.loading}
+            style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '14px', backgroundColor: '#6366f1', color: '#fff', border: 'none', fontWeight: 'bold', marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}
+          >
+            {status.loading ? "Enviando..." : <><Send size={18} /> Enviar Ahora</>}
+          </button>
         </form>
       </div>
     </div>,
@@ -370,29 +381,26 @@ export default function DashboardIndex() {
   if (!user) return null;
 
   switch (user.rol) {
-    case 'ESTUDIANTE':
-      return <EstudianteDashboard user={user} />;
-    case 'DOCENTE':
-      return <DocenteDashboard user={user} />;
-    case 'TUTOR':
-      return <TutorDashboard user={user} />;
+    case 'ESTUDIANTE': return <EstudianteDashboard user={user} />;
+    case 'DOCENTE':    return <DocenteDashboard user={user} />;
+    case 'TUTOR':      return <TutorDashboard user={user} />;
     case 'ADMIN':
-    default:
-      return <AdminDashboard user={user} />;
+    default:           return <AdminDashboard user={user} />;
   }
 }
 
 function AdminDashboard({ user }) {
   const navigate = useNavigate();
   const [animated, setAnimated] = useState(false);
-  const [stats, setStats]   = useState({ estudiantes: 0, docentes: 0, tutores: 0, cursos: 0 });
+  const [stats, setStats] = useState({ estudiantes: 0, docentes: 0, tutores: 0, cursos: 0 });
   const [chartData, setChartData] = useState(null);
   
-  // Notification Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [usuariosList, setUsuariosList] = useState([]);
 
   useEffect(() => {
+    // Ensuring dark mode is removed if it was applied globally
+    document.documentElement.classList.remove('dark');
     const t = setTimeout(() => setAnimated(true), 50);
     return () => clearTimeout(t);
   }, []);
@@ -462,6 +470,7 @@ function AdminDashboard({ user }) {
               Mes <ChevronDown size={14} />
             </div>
           </div>
+          
           <DoubleBarChart data={chartData} />
           
           {/* Floating Action Button */}

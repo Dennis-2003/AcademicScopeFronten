@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FolderOpen, FileText, Video, Link as LinkIcon, Download, Search, BookOpen } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';

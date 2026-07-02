@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Clock, MapPin, User, Trash2, Coffee, BookOpen } from 'lucide-react';
 
 export default function HorarioTarjeta({ item, onEliminar, onDragStart, onEdit }) {

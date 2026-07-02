@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import HorarioTarjeta from './HorarioTarjeta';
 
 export default function HorarioColumna({ dia, items, onEliminar, onDragStart, onDropItem, onEdit }) {

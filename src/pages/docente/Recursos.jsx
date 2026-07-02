@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Upload, FileText, Image as ImageIcon, Video, Link as LinkIcon, Download, Trash2, Loader2, Search, Eye, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';

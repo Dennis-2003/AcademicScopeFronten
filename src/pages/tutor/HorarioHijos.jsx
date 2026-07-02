@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { GraduationCap, Calendar as CalendarIcon, Clock, MapPin } from 'lucide-react';
@@ -43,7 +43,7 @@ export default function HorarioHijos() {
       let cursosDelEstudiante = [];
       
       if (matriculas.length > 0) {
-        const gradoId = matriculas[0].grado.id;
+        const gradoId = matriculas[0].curso.grado.id;
         const cursosRes = await api.get(`/cursos/grado/${gradoId}`);
         cursosDelEstudiante = cursosRes.data;
       }
